@@ -1,92 +1,31 @@
 import Solution from "../models/Solution.js";
 import Problem from "../models/Problem.js";
-import {
-  cacheGet,
-  cacheSet,
-  cacheDel,
-} from "../services/cache.service.js";
+import { cacheGet, cacheSet } from "../services/cache.service.js";
 
-// ---------------------- ADD / UPDATE SOLUTION (Admin) ----------------------
-export const addOrUpdateSolution = async (req, res) => {
+export const getSolutionByProblemSlug = async (req, res) => {
   try {
-    const {
-      problemId,
-      myThought,
-      engThought,
-      hints = [],
-      codeBlocks = [],
-      youtubeLink,
-    } = req.body;
+    const { slug } = req.params;
 
-    const problem = await Problem.findById(problemId);
-    if (!problem) {
-      return res.status(404).json({ message: "Problem does not exist" });
-    }
-
-    let existing = await Solution.findOne({ problemId });
-
-    let solution;
-
-    if (existing) {
-      // UPDATE
-      solution = await Solution.findOneAndUpdate(
-        { problemId },
-        {
-          myThought,
-          engThought,
-          hints,
-          codeBlocks,
-          youtubeLink,
-        },
-        { new: true }
-      );
-    } else {
-      // ADD NEW
-      solution = await Solution.create({
-        problemId,
-        myThought,
-        engThought,
-        hints,
-        codeBlocks,
-        youtubeLink,
-      });
-    }
-
-    // Clear cache
-    const cacheKey = `solution:${problemId}`;
-    await cacheDel(cacheKey);
-
-    res.json({ success: true, solution });
-  } catch (err) {
-    res.status(500).json({
-      message: "Solution add/update failed",
-      error: err.message,
-    });
-  }
-};
-
-// ---------------------- GET SOLUTION (Public) ----------------------
-export const getSolutionByProblemId = async (req, res) => {
-  try {
-    const { problemId } = req.params;
-
-    const cacheKey = `solution:${problemId}`;
+    const cacheKey = `solution:slug:${slug}`;
     const cached = await cacheGet(cacheKey);
-
     if (cached) {
       return res.json({ fromCache: true, solution: cached });
     }
 
-    const solution = await Solution.findOne({ problemId });
-    if (!solution) {
-      return res.status(404).json({ message: "No solution found" });
+    const problem = await Problem.findOne({ slug });
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
     }
 
-    // Cache for 6 hours
-    await cacheSet(cacheKey, solution, 6 * 3600);
+    const solution = await Solution.findOne({ problemId: problem._id }).lean();
+    if (!solution) {
+      return res.json({ success: true, solution: null });
+    }
+
+    await cacheSet(cacheKey, solution, 3600);
 
     res.json({ success: true, solution });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Failed to load solution" });
   }
 };

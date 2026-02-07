@@ -1,25 +1,21 @@
 import express from "express";
-import {
-  addProblem,
-  getAllProblems,
-  getProblemBySlug,
-  searchProblems,
-} from "../controllers/problem.controller.js";
-
-import { protect } from "../middleware/auth.js";
-import { adminOnly } from "../middleware/admin.js";
 import { rateLimit } from "../middleware/rateLimit.js";
-import { validate } from "../middleware/validate.js";
-import { addProblemSchema } from "../validators/problem.validation.js";
+import {
+  getPublicProblems,getProblemDetail
+} from "../controllers/problem.controller.js";
 
 const router = express.Router();
 
-// PUBLIC ROUTES
-router.get("/", getAllProblems);
-router.get("/search", rateLimit({ keyPrefix: "search", limit: 10, windowSec: 60 }), searchProblems);
-router.get("/:slug", getProblemBySlug);
+router.get(
+  "/",
+  rateLimit({ keyPrefix: "problems", limit: 60, windowSec: 60 }),
+  getPublicProblems
+);
 
-// ADMIN ROUTES
-router.post("/add", protect, adminOnly, validate(addProblemSchema), addProblem);
+router.get(
+  "/:slug",
+  rateLimit({ keyPrefix: "problem-detail", limit: 60, windowSec: 60 }),
+  getProblemDetail
+);
 
 export default router;

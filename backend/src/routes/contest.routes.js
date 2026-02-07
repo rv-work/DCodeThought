@@ -1,31 +1,22 @@
 import express from "express";
-
-import {
-  addOrUpdateContest,
-  getAllContests,
-  getContestDetails,
-  searchContests,
-} from "../controllers/contest.controller.js";
-
-import { protect } from "../middleware/auth.js";
-import { adminOnly } from "../middleware/admin.js";
 import { rateLimit } from "../middleware/rateLimit.js";
-import { validate } from "../middleware/validate.js";
-import { addContestSchema } from "../validators/contest.validation.js";
+import {
+  getPublicContests,
+  getContestDetail,
+} from "../controllers/contest.public.controller.js";
 
 const router = express.Router();
 
-// PUBLIC ROUTES
-router.get("/", getAllContests);
-
-router.get("/search",
-  rateLimit({ keyPrefix: "search-contest", limit: 10, windowSec: 60 }),
-  searchContests
+router.get(
+  "/",
+  rateLimit({ keyPrefix: "contests", limit: 60, windowSec: 60 }),
+  getPublicContests
 );
 
-router.get("/:contestNumber", getContestDetails);
-
-// ADMIN ROUTE
-router.post("/add", protect, adminOnly, validate(addContestSchema), addOrUpdateContest);
+router.get(
+  "/:contestNumber",
+  rateLimit({ keyPrefix: "contest-detail", limit: 60, windowSec: 60 }),
+  getContestDetail
+);
 
 export default router;

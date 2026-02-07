@@ -11,3 +11,11 @@ export type AdminReport = {
     email: string;
   };
 };
+
+export type ReportStatus = {
+  _id: string;
+  title: string;
+  description: string;
+  resolved: boolean;
+  createdAt: string;
+};

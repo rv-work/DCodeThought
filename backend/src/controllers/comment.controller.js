@@ -1,99 +1,77 @@
 import Comment from "../models/Comment.js";
 import Problem from "../models/Problem.js";
 
-// ------------------------- ADD COMMENT -------------------------
+const applyVote = (votes, userId, value) => {
+  const existing = votes.find(v => v.userId.toString() === userId.toString());
+  if (existing) {
+    if (existing.value === value) {
+      return votes.filter(v => v.userId.toString() !== userId.toString());
+    }
+    existing.value = value;
+    return votes;
+  }
+  return [...votes, { userId, value }];
+};
+
+export const getCommentsByProblemSlug = async (req, res) => {
+  const problem = await Problem.findOne({ slug: req.params.slug });
+  if (!problem) return res.json({ success: true, comments: [] });
+
+  const comments = await Comment.find({ problemId: problem._id })
+    .populate("userId", "name")
+    .populate("replies.userId", "name")
+    .sort({ createdAt: -1 });
+
+  res.json({ success: true, comments });
+};
+
 export const addComment = async (req, res) => {
-  try {
-    const { problemId, text } = req.body;
+  const problem = await Problem.findOne({ slug: req.params.slug });
+  if (!problem) return res.status(404).json({ message: "Problem not found" });
 
-    const exists = await Problem.findById(problemId);
-    if (!exists) return res.status(404).json({ message: "Problem not found" });
+  const comment = await Comment.create({
+    problemId: problem._id,
+    userId: req.user._id,
+    text: req.body.text,
+  });
 
-    const comment = await Comment.create({
-      problemId,
-      userId: req.user._id,
-      text,
-    });
-
-    res.json({ success: true, comment });
-  } catch (err) {
-    res.status(500).json({ message: "Add comment failed" });
-  }
+  res.json({ success: true, comment });
 };
 
-// ------------------------- GET COMMENTS -------------------------
-export const getComments = async (req, res) => {
-  try {
-    const { problemId } = req.params;
-    const { sort = "newest" } = req.query;
-
-    let sortQuery = {};
-
-    if (sort === "newest") sortQuery = { createdAt: -1 };
-    else if (sort === "oldest") sortQuery = { createdAt: 1 };
-    else if (sort === "most-liked") sortQuery = { likes: -1 };
-
-    const comments = await Comment.find({ problemId })
-      .populate("userId", "name")
-      .sort(sortQuery);
-
-    res.json({ success: true, comments });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to load comments" });
-  }
-};
-
-// ------------------------- ADD REPLY -------------------------
 export const addReply = async (req, res) => {
-  try {
-    const { commentId, text } = req.body;
+  const comment = await Comment.findById(req.params.commentId);
+  if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Comment not found" });
+  comment.replies.push({
+    userId: req.user._id,
+    text: req.body.text,
+  });
 
-    comment.replies.unshift({
-      userId: req.user._id,
-      text,
-    });
-
-    await comment.save();
-
-    res.json({ success: true, comment });
-  } catch (err) {
-    res.status(500).json({ message: "Reply failed" });
-  }
+  await comment.save();
+  res.json({ success: true });
 };
 
-// ------------------------- LIKE COMMENT -------------------------
-export const likeComment = async (req, res) => {
-  try {
-    const { commentId } = req.body;
+export const voteComment = async (req, res) => {
+  const value = req.body.value === "up" ? 1 : -1;
+  const comment = await Comment.findById(req.params.commentId);
+  if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Comment not found" });
+  comment.votes = applyVote(comment.votes, req.user._id, value);
+  await comment.save();
 
-    comment.likes += 1;
-    await comment.save();
-
-    res.json({ success: true, likes: comment.likes });
-  } catch (err) {
-    res.status(500).json({ message: "Like failed" });
-  }
+  res.json({ success: true });
 };
 
-// ------------------------- DISLIKE COMMENT -------------------------
-export const dislikeComment = async (req, res) => {
-  try {
-    const { commentId } = req.body;
+export const voteReply = async (req, res) => {
+  const value = req.body.value === "up" ? 1 : -1;
+  const comment = await Comment.findById(req.params.commentId);
+  if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Comment not found" });
+  const reply = comment.replies.id(req.params.replyId);
+  if (!reply) return res.status(404).json({ message: "Reply not found" });
 
-    comment.dislikes += 1;
-    await comment.save();
+  reply.votes = applyVote(reply.votes, req.user._id, value);
+  await comment.save();
 
-    res.json({ success: true, dislikes: comment.dislikes });
-  } catch (err) {
-    res.status(500).json({ message: "Dislike failed" });
-  }
+  res.json({ success: true });
 };

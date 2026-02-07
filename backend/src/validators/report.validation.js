@@ -1,26 +1,8 @@
-import mongoose from "mongoose";
+// validators/report.validation.js
+import { z } from "zod";
 
-const ReportSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-
-  screenshot: { type: String }, // optional (url)
-
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-
-  resolved: {
-    type: Boolean,
-    default: false,
-  },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+export const addReportSchema = z.object({
+  title: z.string().min(5).max(120),
+  description: z.string().min(10).max(3000),
+  screenshot: z.string().url().optional().nullable(),
 });
-
-export default mongoose.model("Report", ReportSchema);

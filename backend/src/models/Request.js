@@ -1,29 +1,28 @@
 import mongoose from "mongoose";
 
+const VoteSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  },
+  { _id: false }
+);
+
 const RequestSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["feature", "question"],
+    enum: ["question", "feature"],
     required: true,
   },
-
   title: { type: String, required: true },
   description: { type: String, required: true },
-
-  votes: { type: Number, default: 0 },
-
-  completed: { type: Boolean, default: false },
-
+  votes: [VoteSchema],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  completed: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
 });
 
 export default mongoose.model("Request", RequestSchema);

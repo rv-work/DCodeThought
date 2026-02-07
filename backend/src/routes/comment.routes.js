@@ -1,59 +1,54 @@
 import express from "express";
-
-import {
-  addComment,
-  getComments,
-  addReply,
-  likeComment,
-  dislikeComment,
-} from "../controllers/comment.controller.js";
-
 import { protect } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 import { validate } from "../middleware/validate.js";
-
+import {
+  getCommentsByProblemSlug,
+  addComment,
+  addReply,
+  voteComment,
+  voteReply,
+} from "../controllers/comment.controller.js";
 import {
   addCommentSchema,
   addReplySchema,
-  likeDislikeSchema,
+  voteSchema,
 } from "../validators/comment.validation.js";
 
 const router = express.Router();
 
-// ---------------------- PUBLIC ----------------------
-router.get("/:problemId", getComments);
+router.get("/:slug", getCommentsByProblemSlug);
 
-// ---------------------- LOGGED-IN USERS ----------------------
 router.post(
-  "/add",
+  "/:slug",
   protect,
-  rateLimit({ keyPrefix: "comment", limit: 1, windowSec: 10 }),
+  rateLimit({ keyPrefix: "comment-add", limit: 10, windowSec: 60 }),
   validate(addCommentSchema),
   addComment
 );
 
 router.post(
-  "/reply",
+  "/reply/:commentId",
   protect,
-  rateLimit({ keyPrefix: "reply", limit: 2, windowSec: 10 }),
+  rateLimit({ keyPrefix: "reply-add", limit: 10, windowSec: 60 }),
   validate(addReplySchema),
   addReply
 );
 
 router.post(
-  "/like",
+  "/vote/:commentId",
   protect,
-  rateLimit({ keyPrefix: "like", limit: 5, windowSec: 10 }),
-  validate(likeDislikeSchema),
-  likeComment
+  rateLimit({ keyPrefix: "comment-vote", limit: 30, windowSec: 60 }),
+  validate(voteSchema),
+  voteComment
 );
 
 router.post(
-  "/dislike",
+  "/vote/:commentId/:replyId",
   protect,
-  rateLimit({ keyPrefix: "dislike", limit: 5, windowSec: 10 }),
-  validate(likeDislikeSchema),
-  dislikeComment
+  rateLimit({ keyPrefix: "reply-vote", limit: 30, windowSec: 60 }),
+  validate(voteSchema),
+  voteReply
 );
 
 export default router;

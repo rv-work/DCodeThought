@@ -12,3 +12,15 @@ export type AdminRequest = {
     email: string;
   };
 };
+
+export type RequestType = "question" | "feature";
+
+export type PublicRequest = {
+  _id: string;
+  type: RequestType;
+  title: string;
+  description: string;
+  votes: { userId: string }[];
+  completed: boolean;
+  createdAt: string;
+};

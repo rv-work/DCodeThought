@@ -10,7 +10,6 @@ import potdRoutes from "./routes/potd.routes.js";
 import contestRoutes from "./routes/contest.routes.js";
 import solutionRoutes from "./routes/solution.routes.js";
 import homeRoutes from "./routes/home.routes.js";
-import statsRoutes from "./routes/stats.routes.js";
 
 dotenv.config();
 
@@ -29,13 +28,13 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/profile", userRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/potd", potdRoutes);
 app.use("/api/contests", contestRoutes);
 app.use("/api/solutions", solutionRoutes);
+app.use("/api/comments", commentRoutes);
 app.use("/api/home", homeRoutes);
-app.use("/api/stats", statsRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/requests", requestRoutes);
 

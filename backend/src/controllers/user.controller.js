@@ -1,65 +1,41 @@
 import User from "../models/User.js";
+import Report from "../models/Report.js";
+import Request from "../models/Request.js";
 
-// ---------------------- GET CURRENT USER ----------------------
-export const getMe = async (req, res) => {
-  return res.json({
+// -------- BASIC PROFILE --------
+export const getMyProfile = async (req, res) => {
+  res.json({
     success: true,
     user: req.user,
   });
 };
 
-// ---------------------- UPDATE USER PROFILE ----------------------
-export const updateProfile = async (req, res) => {
-  try {
-    const { name } = req.body;
+// -------- MY REPORTS --------
+export const getMyReports = async (req, res) => {
+  const reports = await Report.find({ userId: req.user._id })
+    .populate("problemId", "title slug")
+    .sort({ createdAt: -1 });
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { name },
-      { new: true }
-    ).select("-password");
-
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ message: "Update failed" });
-  }
+  res.json({ success: true, reports });
 };
 
-// ---------------------- ADD RECENTLY VIEWED PROBLEM ----------------------
-export const addRecentView = async (req, res) => {
-  try {
-    const { problemId } = req.body;
+// -------- MY REQUESTS --------
+export const getMyRequests = async (req, res) => {
+  const requests = await Request.find({ createdBy: req.user._id })
+    .sort({ createdAt: -1 });
 
-    const user = await User.findById(req.user._id);
-
-    // Remove if already there
-    user.recentlyViewed = user.recentlyViewed.filter(
-      (item) => item.problemId.toString() !== problemId
-    );
-
-    // Add new at top
-    user.recentlyViewed.unshift({
-      problemId,
-      viewedAt: new Date(),
-    });
-
-    // Limit to 10 entries
-    user.recentlyViewed = user.recentlyViewed.slice(0, 10);
-
-    await user.save();
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ message: "Recent view update failed" });
-  }
+  res.json({ success: true, requests });
 };
 
-// ---------------------- ADMIN: GET ALL USERS ----------------------
-export const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select("-password");
-    res.json({ success: true, users });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to load users" });
-  }
+// -------- RECENTLY VIEWED --------
+export const getMyRecentProblems = async (req, res) => {
+  const user = await User.findById(req.user._id).populate(
+    "recentlyViewed.problemId",
+    "problemNumber title slug difficulty"
+  );
+
+  res.json({
+    success: true,
+    recent: user.recentlyViewed,
+  });
 };

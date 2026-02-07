@@ -1,20 +1,13 @@
 import express from "express";
-import {
-  addOrUpdateSolution,
-  getSolutionByProblemId,
-} from "../controllers/solution.controller.js";
-
-import { protect } from "../middleware/auth.js";
-import { adminOnly } from "../middleware/admin.js";
-import { validate } from "../middleware/validate.js";
-import { solutionSchema } from "../validators/solution.validation.js";
+import { rateLimit } from "../middleware/rateLimit.js";
+import { getSolutionByProblemSlug } from "../controllers/solution.public.controller.js";
 
 const router = express.Router();
 
-// PUBLIC
-router.get("/:problemId", getSolutionByProblemId);
-
-// ADMIN ONLY
-router.post("/add", protect, adminOnly, validate(solutionSchema), addOrUpdateSolution);
+router.get(
+  "/:slug",
+  rateLimit({ keyPrefix: "solution", limit: 60, windowSec: 60 }),
+  getSolutionByProblemSlug
+);
 
 export default router;

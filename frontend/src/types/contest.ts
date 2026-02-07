@@ -11,3 +11,18 @@ export type Contest = {
   contestDate: string;
   problems: ContestProblem[];
 };
+
+import type { PublicProblem } from "./problem";
+
+export type PublicContest = {
+  contestNumber: number;
+  contestName: string;
+  contestDate: string;
+};
+
+export type ContestDetail = {
+  contestNumber: number;
+  contestName: string;
+  contestDate: string;
+  problems: PublicProblem[];
+};
