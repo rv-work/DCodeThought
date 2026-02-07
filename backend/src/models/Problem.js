@@ -1,12 +1,26 @@
 import mongoose from "mongoose";
 
 const ProblemSchema = new mongoose.Schema({
-  problemNumber: { type: Number, required: true },
-  title: { type: String, required: true },
+  problemNumber: {
+    type: Number,
+    required: true,
+  },
 
-  slug: { type: String, required: true, unique: true },
+  title: {
+    type: String,
+    required: true,
+  },
 
-  leetcodeLink: { type: String, required: true },
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+
+  leetcodeLink: {
+    type: String,
+    required: true,
+  },
 
   tags: [String],
 
@@ -16,13 +30,36 @@ const ProblemSchema = new mongoose.Schema({
     required: true,
   },
 
-  isPOTD: { type: Boolean, default: false },
-  potdDate: { type: Date },
+  // ✅ MAIN TYPE (NEW)
+  type: {
+    type: String,
+    enum: ["potd", "contest", "requested"],
+    required: true,
+  },
 
-  isContest: { type: Boolean, default: false },
-  contestNumber: Number,
-  contestName: String,
-  contestDate: Date,
+  // -------- POTD FIELDS --------
+  potdDate: {
+    type: Date,
+  },
+
+  // -------- CONTEST FIELDS --------
+  contestNumber: {
+    type: Number,
+  },
+
+  contestName: {
+    type: String,
+  },
+
+  contestDate: {
+    type: Date,
+  },
+
+  // -------- REQUESTED META --------
+  requestedFrom: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Request",
+  },
 
   addedAt: {
     type: Date,

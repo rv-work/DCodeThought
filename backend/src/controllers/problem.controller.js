@@ -11,53 +11,74 @@ export const addProblem = async (req, res) => {
       leetcodeLink,
       tags,
       difficulty,
-      isPOTD,
+      type, // potd | contest | requested
+
+      // optional / conditional
       potdDate,
-      isContest,
       contestNumber,
       contestName,
       contestDate,
+      requestedFrom,
     } = req.body;
 
     const slug = generateSlug(title, problemNumber);
 
     const exists = await Problem.findOne({ slug });
-    if (exists) return res.status(400).json({ message: "Problem already exists" });
+    if (exists) {
+      return res.status(400).json({ message: "Problem already exists" });
+    }
 
-    const problem = await Problem.create({
+    // Build base payload
+    const payload = {
       problemNumber,
       title,
       slug,
       leetcodeLink,
       tags,
       difficulty,
-      isPOTD,
-      potdDate,
-      isContest,
-      contestNumber,
-      contestName,
-      contestDate,
-    });
+      type,
+    };
+
+    // Attach fields based on type
+    if (type === "potd") {
+      payload.potdDate = potdDate;
+    }
+
+    if (type === "contest") {
+      payload.contestNumber = contestNumber;
+      payload.contestName = contestName;
+      payload.contestDate = contestDate;
+    }
+
+    if (type === "requested") {
+      payload.requestedFrom = requestedFrom;
+    }
+
+    const problem = await Problem.create(payload);
 
     // Clear cache for lists
     await cacheDel("problems:all");
 
     res.json({ success: true, problem });
   } catch (err) {
-    res.status(500).json({ message: "Add problem failed", error: err.message });
+    res.status(500).json({
+      message: "Add problem failed",
+      error: err.message,
+    });
   }
 };
 
 // ---------------------- GET ALL PROBLEMS ----------------------
 export const getAllProblems = async (req, res) => {
   try {
-    // Check Redis cache
     const cached = await cacheGet("problems:all");
-    if (cached) return res.json({ fromCache: true, problems: cached });
+    if (cached) {
+      return res.json({ fromCache: true, problems: cached });
+    }
 
     const problems = await Problem.find().sort({ problemNumber: 1 });
 
-    // Save to cache for 1 hour
+    // Cache for 1 hour
     await cacheSet("problems:all", problems, 3600);
 
     res.json({ success: true, problems });
@@ -73,10 +94,14 @@ export const getProblemBySlug = async (req, res) => {
 
     const key = `problem:${slug}`;
     const cached = await cacheGet(key);
-    if (cached) return res.json({ fromCache: true, problem: cached });
+    if (cached) {
+      return res.json({ fromCache: true, problem: cached });
+    }
 
     const problem = await Problem.findOne({ slug });
-    if (!problem) return res.status(404).json({ message: "Problem not found" });
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
 
     await cacheSet(key, problem, 3600);
 
@@ -91,7 +116,9 @@ export const searchProblems = async (req, res) => {
   try {
     const { q } = req.query;
 
-    if (!q) return res.json({ success: true, problems: [] });
+    if (!q) {
+      return res.json({ success: true, problems: [] });
+    }
 
     const regex = new RegExp(q, "i");
 
@@ -101,7 +128,7 @@ export const searchProblems = async (req, res) => {
         { tags: regex },
         { problemNumber: Number(q) || -1 },
       ],
-    });
+    }).sort({ problemNumber: 1 });
 
     res.json({ success: true, problems });
   } catch (err) {

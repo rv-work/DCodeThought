@@ -96,6 +96,11 @@ export const googleLogin = async (req, res) => {
 
 // ---------------------- LOGOUT ----------------------
 export const logout = async (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+  httpOnly: true,
+  sameSite: "strict",
+  secure: process.env.NODE_ENV === "production",
+});
+
   res.json({ success: true, message: "Logged out" });
 };

@@ -2,15 +2,13 @@ import { z } from "zod";
 
 export const solutionSchema = z.object({
   problemId: z.string(),
-  myThought: z.string(),
-  engThought: z.string(),
 
-  code: z.object({
-    java: z.string().optional(),
-    cpp: z.string().optional(),
-    python: z.string().optional(),
-    js: z.string().optional(),
-  }),
+  myThought: z.string().min(10),
+  engThought: z.string().optional(),
+
+  hints: z.array(z.string()).default([]),
+
+  code: z.record(z.string(), z.string()).optional(),
 
   youtubeLink: z.string().url().optional(),
 });

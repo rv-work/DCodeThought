@@ -1,83 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { API } from "@/lib/api";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useFetch } from "@/hooks/useFetch";
-import Loader from "@/components/Loader";
-import EmptyState from "@/components/EmptyState";
-import AdminProblemRow from "@/components/AdminProblemRow";
-import SearchBar from "@/components/SearchBar";
+import { useEffect, useState } from "react";
+import { getAdminProblems, deleteAdminProblem } from "@/api/admin.problem.api";
+import type { Problem } from "@/types/problem";
+import AdminTable from "@/components/admin/AdminTable";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import Link from "next/link";
 
 export default function AdminProblemsPage() {
-  const [search, setSearch] = useState("");
-  const [difficulty, setDifficulty] = useState("");
-  const [tag, setTag] = useState("");
+  const [problems, setProblems] = useState<Problem[]>([]);
 
-  const debounced = useDebounce(search, 300);
-
-  const url = `${API.problems.all}?search=${debounced}&difficulty=${difficulty}&tag=${tag}`;
-
-  const { data, loading, error, refetch } = useFetch(url, true);
-  // true ⇒ can refresh manually
-
-  if (loading) return <Loader />;
-  if (error) return <EmptyState message={error} />;
-
-  const problems = data?.problems || [];
+  useEffect(() => {
+    getAdminProblems().then((res) => setProblems(res.problems));
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">🛠 Manage Problems</h1>
+    <div>
+      <AdminPageHeader
+        title="Problems"
+        action={
+          <Link href="/admin/problems/add" className="underline">
+            Add Problem
+          </Link>
+        }
+      />
 
-      {/* FILTERS */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by title / number..."
-        />
-
-        <select
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          className="px-3 py-2 border border-border rounded bg-background"
-        >
-          <option value="">Difficulty</option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
-        </select>
-
-        <select
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-          className="px-3 py-2 border border-border rounded bg-background"
-        >
-          <option value="">Tag</option>
-          <option value="Array">Array</option>
-          <option value="Graph">Graph</option>
-          <option value="DP">DP</option>
-          <option value="Tree">Tree</option>
-          <option value="String">String</option>
-          <option value="Math">Math</option>
-        </select>
-      </div>
-
-      {/* PROBLEMS LIST */}
-      <div className="space-y-4">
-        {problems.length ? (
-          problems.map((p: any) => (
-            <AdminProblemRow
-              key={p._id}
-              problem={p}
-              refresh={refetch}
-            />
-          ))
-        ) : (
-          <EmptyState message="No problems found." />
-        )}
-      </div>
+      <AdminTable
+        columns={[
+          { key: "problemNumber", label: "#" },
+          { key: "title", label: "Title" },
+          { key: "difficulty", label: "Difficulty" },
+          { key: "type", label: "Type" },
+        ]}
+        data={problems}
+        onDelete={async (id) => {
+          await deleteAdminProblem(id);
+          setProblems((p) => p.filter((x) => x._id !== id));
+        }}
+      />
     </div>
   );
 }

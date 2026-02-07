@@ -1,30 +1,53 @@
-export default function AdminDashboard() {
+"use client";
+
+import { useEffect, useState } from "react";
+import { getAdminDashboard } from "@/api/admin.api";
+import type { AdminDashboardResponse } from "@/types/admin";
+
+export default function AdminDashboardPage() {
+  const [data, setData] = useState<AdminDashboardResponse | null>(null);
+
+  useEffect(() => {
+    getAdminDashboard().then(setData);
+  }, []);
+
+  if (!data) return <div>Loading dashboard...</div>;
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">Welcome Admin 👋</h1>
+    <div className="space-y-6">
+      <h1 className="text-xl font-bold">Dashboard</h1>
 
-      <p className="text-muted dark:text-muted-dark">
-        Use the sidebar to manage problems, contests, POTD & more.
-      </p>
-
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mt-6">
-
-        <div className="p-4 border border-border rounded-lg bg-card shadow-card">
-          <h3 className="text-lg font-semibold">Problems</h3>
-          <p className="text-muted dark:text-muted-dark">Manage all problems.</p>
+      {/* Stats */}
+      <div className="flex gap-4">
+        <div className="border p-4 rounded">
+          Users: {data.stats.users}
         </div>
-
-        <div className="p-4 border border-border rounded-lg bg-card shadow-card">
-          <h3 className="text-lg font-semibold">Contests</h3>
-          <p className="text-muted dark:text-muted-dark">Weekly & Biweekly contests.</p>
+        <div className="border p-4 rounded">
+          Problems: {data.stats.problems}
         </div>
-
-        <div className="p-4 border border-border rounded-lg bg-card shadow-card">
-          <h3 className="text-lg font-semibold">POTD</h3>
-          <p className="text-muted dark:text-muted-dark">Configure daily problem.</p>
-        </div>
-
       </div>
+
+      {/* Recent Reports */}
+      <section>
+        <h2 className="font-semibold mb-2">Recent Reports</h2>
+        {data.recentReports.map((r) => (
+          <div key={r._id} className="text-sm">
+            {r.title}
+          </div>
+        ))}
+      </section>
+
+      {/* Pending Requests */}
+      <section>
+        <h2 className="font-semibold mb-2">
+          Pending Requested Questions (50+ votes)
+        </h2>
+        {data.pendingRequests.map((r) => (
+          <div key={r._id} className="text-sm">
+            {r.title} ({r.votes})
+          </div>
+        ))}
+      </section>
     </div>
   );
 }

@@ -13,13 +13,15 @@ export const addOrUpdateSolution = async (req, res) => {
       problemId,
       myThought,
       engThought,
-      code,
+      hints = [],
+      codeBlocks = [],
       youtubeLink,
     } = req.body;
 
     const problem = await Problem.findById(problemId);
-    if (!problem)
+    if (!problem) {
       return res.status(404).json({ message: "Problem does not exist" });
+    }
 
     let existing = await Solution.findOne({ problemId });
 
@@ -29,7 +31,13 @@ export const addOrUpdateSolution = async (req, res) => {
       // UPDATE
       solution = await Solution.findOneAndUpdate(
         { problemId },
-        { myThought, engThought, code, youtubeLink },
+        {
+          myThought,
+          engThought,
+          hints,
+          codeBlocks,
+          youtubeLink,
+        },
         { new: true }
       );
     } else {
@@ -38,7 +46,8 @@ export const addOrUpdateSolution = async (req, res) => {
         problemId,
         myThought,
         engThought,
-        code,
+        hints,
+        codeBlocks,
         youtubeLink,
       });
     }
@@ -49,7 +58,10 @@ export const addOrUpdateSolution = async (req, res) => {
 
     res.json({ success: true, solution });
   } catch (err) {
-    res.status(500).json({ message: "Solution update failed", error: err.message });
+    res.status(500).json({
+      message: "Solution add/update failed",
+      error: err.message,
+    });
   }
 };
 
@@ -61,10 +73,14 @@ export const getSolutionByProblemId = async (req, res) => {
     const cacheKey = `solution:${problemId}`;
     const cached = await cacheGet(cacheKey);
 
-    if (cached) return res.json({ fromCache: true, solution: cached });
+    if (cached) {
+      return res.json({ fromCache: true, solution: cached });
+    }
 
     const solution = await Solution.findOne({ problemId });
-    if (!solution) return res.status(404).json({ message: "No solution found" });
+    if (!solution) {
+      return res.status(404).json({ message: "No solution found" });
+    }
 
     // Cache for 6 hours
     await cacheSet(cacheKey, solution, 6 * 3600);

@@ -1,46 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { API } from "@/lib/api";
-import { useFetch } from "@/hooks/useFetch";
-import { useDebounce } from "@/hooks/useDebounce";
-import Loader from "@/components/Loader";
-import EmptyState from "@/components/EmptyState";
-import SearchBar from "@/components/SearchBar";
-import AdminContestRow from "@/components/AdminContestRow";
+import { useEffect, useState } from "react";
+import { getAdminContests, deleteAdminContest } from "@/api/admin.contest.api";
+import type { Contest } from "@/types/contest";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 export default function AdminContestsPage() {
-  const [search, setSearch] = useState("");
-  const debounced = useDebounce(search, 300);
+  const [contests, setContests] = useState<Contest[]>([]);
 
-  const url = `${API.contest.all}?search=${debounced}`;
-
-  const { data, loading, error, refetch } = useFetch(url, true);
-
-  if (loading) return <Loader />;
-  if (error) return <EmptyState message={error} />;
-
-  const contests = data?.contests || [];
+  useEffect(() => {
+    getAdminContests().then((res) => setContests(res.contests));
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">🏆 Manage Contests</h1>
+    <div>
+      <AdminPageHeader title="Contests" />
 
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search contest by name or number..."
-      />
-
-      <div className="space-y-4">
-        {contests.length ? (
-          contests.map((c: any) => (
-            <AdminContestRow key={c._id} contest={c} refresh={refetch} />
-          ))
-        ) : (
-          <EmptyState message="No contests found." />
-        )}
-      </div>
+      {contests.map((c) => (
+        <div key={c._id} className="border p-2 flex justify-between">
+          <div>
+            Contest {c.contestNumber} — {c.contestName}
+          </div>
+          <button
+            onClick={async () => {
+              await deleteAdminContest(c._id);
+              setContests((x) => x.filter((y) => y._id !== c._id));
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

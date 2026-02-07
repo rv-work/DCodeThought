@@ -1,46 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { API } from "@/lib/api";
-import { useFetch } from "@/hooks/useFetch";
-import { useDebounce } from "@/hooks/useDebounce";
-import Loader from "@/components/Loader";
-import EmptyState from "@/components/EmptyState";
-import SearchBar from "@/components/SearchBar";
-import AdminUserRow from "@/components/AdminUserRow";
+import { useEffect, useState } from "react";
+import { getAdminUsers } from "@/api/admin.user.api";
+import type { AdminUser } from "@/types/user";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminTable from "@/components/admin/AdminTable";
 
 export default function AdminUsersPage() {
-  const [search, setSearch] = useState("");
-  const debounced = useDebounce(search, 300);
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
-  const url = `${API.user.all}?search=${debounced}`;
-
-  const { data, loading, error, refetch } = useFetch(url, true);
-
-  if (loading) return <Loader />;
-  if (error) return <EmptyState message={error} />;
-
-  const users = data?.users || [];
+  useEffect(() => {
+    getAdminUsers().then((res) => setUsers(res.users));
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">👥 Manage Users</h1>
+    <div>
+      <AdminPageHeader title="Users" />
 
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search user by name or email"
+      <AdminTable
+        columns={[
+          { key: "name", label: "Name" },
+          { key: "email", label: "Email" },
+          { key: "role", label: "Role" },
+          { key: "dateOfJoining", label: "Joined" },
+        ]}
+        data={users}
       />
-
-      <div className="space-y-4">
-        {users.length ? (
-          users.map((u: any) => (
-            <AdminUserRow key={u._id} user={u} refresh={refetch} />
-          ))
-        ) : (
-          <EmptyState message="No users found." />
-        )}
-      </div>
     </div>
   );
 }

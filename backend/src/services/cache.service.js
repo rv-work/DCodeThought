@@ -3,7 +3,7 @@ import { redis } from "../config/redis.js";
 // 🔹 Save to cache
 export const cacheSet = async (key, value, ttl = 3600) => {
   try {
-    await redis.set(key, JSON.stringify(value), { EX: ttl });
+    await redis.set(key, JSON.stringify(value), { ex: ttl }); // <-- FIXED
   } catch (err) {
     console.error("❌ Redis SET Error:", err.message);
   }
@@ -29,7 +29,7 @@ export const cacheDel = async (key) => {
   }
 };
 
-// 🔹 Clear multiple keys with prefix (optional future)
+// 🔹 Clear multiple keys with prefix
 export const cacheDelPrefix = async (prefix) => {
   try {
     const keys = await redis.keys(`${prefix}*`);
