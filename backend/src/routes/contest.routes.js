@@ -3,7 +3,7 @@ import { rateLimit } from "../middleware/rateLimit.js";
 import {
   getPublicContests,
   getContestDetail,
-} from "../controllers/contest.public.controller.js";
+} from "../controllers/contest.controller.js";
 
 const router = express.Router();
 

@@ -6,7 +6,7 @@ import {
   getPublicRequests,
   addRequest,
   toggleVote,
-} from "../controllers/request.public.controller.js";
+} from "../controllers/request.controller.js";
 import { addRequestSchema } from "../validators/request.validation.js";
 
 const router = express.Router();

@@ -1,56 +1,189 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap");
+
 @import "tailwindcss";
 
-/* ------------------ BASE THEME VARIABLES ------------------ */
+/* --------------------------------------------- */
+/*                BASE THEME VARIABLES           */
+/* --------------------------------------------- */
 :root {
-  /* App background (pure app me same rahega) */
+  /* Backgrounds */
   --background: #f8fafc;
   --background-secondary: #ffffff;
+  --background-tertiary: #f1f5f9;
 
   /* Text */
   --foreground: #0f172a;
   --foreground-muted: #475569;
+  --subtle: #64748b; /* ⭐ NEW */
 
-  /* Borders / UI */
+  /* Borders */
   --border: #e2e8f0;
+  --border-subtle: #cbd5e1; /* ⭐ NEW */
 
-  /* Accent (future buttons, links) */
+  /* Accent */
   --accent: #2563eb;
 }
 
-/* ------------------ TAILWIND THEME BRIDGE ------------------ */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--foreground-muted);
-  --color-border: var(--border);
-  --color-accent: var(--accent);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* --------------------------------------------- */
+/*                 DARK MODE                     */
+/* --------------------------------------------- */
 
-/* ------------------ DARK MODE ------------------ */
+/* DARK */
 .dark {
   --background: #0b0f19;
   --background-secondary: #111827;
+  --background-tertiary: #162033;
 
   --foreground: #e5e7eb;
   --foreground-muted: #9ca3af;
+  --subtle: #94a3b8; /* ⭐ NEW */
 
   --border: #1f2933;
+  --border-subtle: #334155; /* ⭐ NEW */
 
   --accent: #3b82f6;
 }
 
-/* ------------------ GLOBAL STYLES ------------------ */
+
+
+
+/* --------------------------------------------- */
+/*                 TAILWIND THEME BRIDGE         */
+/* --------------------------------------------- */
+/* TAILWIND THEME BRIDGE */
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-tertiary: var(--background-tertiary);
+
+  --color-foreground: var(--foreground);
+  --color-muted: var(--foreground-muted);
+  --color-subtle: var(--subtle);            /* ⭐ NEW */
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle); /* ⭐ NEW */
+
+  --color-accent: var(--accent);
+
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Syne", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+/* --------------------------------------------- */
+/*               GLOBAL STYLES                   */
+/* --------------------------------------------- */
 html,
 body {
   height: 100%;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* --------------------------------------------- */
+/*              GLOBAL FORM CLASSES              */
+/* --------------------------------------------- */
+
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all;
+}
+
+.select-field {
+  @apply w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-pointer;
+}
+
+.primary-btn {
+  @apply w-full px-5 py-3 rounded-xl bg-linear-to-r from-accent to-purple-500 text-white font-medium shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300;
+}
+
+.card {
+  @apply bg-background-secondary/40 backdrop-blur-xl border border-border-subtle rounded-2xl p-8 shadow-xl;
+}
+
+
+/* --------------------------------------------- */
+/*              SELECTION STYLING                */
+/* --------------------------------------------- */
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* --------------------------------------------- */
+/*              CUSTOM SCROLLBAR                 */
+/* --------------------------------------------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-secondary);
+}
+
+/* --------------------------------------------- */
+/*                UTILITIES                      */
+/* --------------------------------------------- */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --------------------------------------------- */
+/*                ANIMATIONS                     */
+/* --------------------------------------------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Animation utility classes */
+.animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+.animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+.animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* Staggered animations */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }

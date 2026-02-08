@@ -1,5 +1,3 @@
-import type { User } from "./auth";
-
 export type AdminDashboardResponse = {
   success: boolean;
   stats: {

@@ -5,7 +5,7 @@ import {
   getMyReports,
   getMyRequests,
   getMyRecentProblems,
-} from "../controllers/user.profile.controller.js";
+} from "../controllers/profile.controller.js";
 
 const router = express.Router();
 

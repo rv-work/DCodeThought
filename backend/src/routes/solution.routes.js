@@ -1,6 +1,6 @@
 import express from "express";
 import { rateLimit } from "../middleware/rateLimit.js";
-import { getSolutionByProblemSlug } from "../controllers/solution.public.controller.js";
+import { getSolutionByProblemSlug } from "../controllers/solution.controller.js";
 
 const router = express.Router();
 

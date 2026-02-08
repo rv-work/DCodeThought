@@ -8,8 +8,13 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<AdminDashboardResponse | null>(null);
 
   useEffect(() => {
-    getAdminDashboard().then(setData);
+    getAdminDashboard()
+      .then(setData)
+      .catch((err: Error) => {
+        alert(err.message); // 👈 "Admin only"
+      });
   }, []);
+
 
   if (!data) return <div>Loading dashboard...</div>;
 

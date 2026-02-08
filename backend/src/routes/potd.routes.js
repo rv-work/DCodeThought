@@ -3,7 +3,7 @@ import { rateLimit } from "../middleware/rateLimit.js";
 import {
   getTodayPotd,
   getPotdHistory,
-} from "../controllers/potd.public.controller.js";
+} from "../controllers/potd.controller.js";
 
 const router = express.Router();
 

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { getAdminProblems, deleteAdminProblem } from "@/api/admin.problem.api";
-import type { Problem } from "@/types/problem";
+import type { PublicProblem } from "@/types/problem";
 import AdminTable from "@/components/admin/AdminTable";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import Link from "next/link";
 
 export default function AdminProblemsPage() {
-  const [problems, setProblems] = useState<Problem[]>([]);
+  const [problems, setProblems] = useState<PublicProblem[]>([]);
 
   useEffect(() => {
     getAdminProblems().then((res) => setProblems(res.problems));

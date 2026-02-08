@@ -4,6 +4,7 @@ import Report from "../../models/Report.js";
 import Request from "../../models/Request.js";
 
 export const getAdminDashboard = async (req, res) => {
+
   try {
     const [
       totalUsers,
@@ -16,12 +17,16 @@ export const getAdminDashboard = async (req, res) => {
       Report.find({ resolved: false })
         .sort({ createdAt: -1 })
         .limit(5),
+
       Request.find({
         type: "question",
-        votes: { $gte: 50 },
         completed: false,
-      }).sort({ votes: -1 }),
+        $expr: {
+          $gte: [{ $size: "$votes" }, 50],
+        },
+      }).sort({ createdAt: -1 }),
     ]);
+
 
     res.json({
       success: true,
@@ -33,6 +38,7 @@ export const getAdminDashboard = async (req, res) => {
       pendingRequests,
     });
   } catch (err) {
+    console.error("Dashboard error:", err);
     res.status(500).json({ message: "Dashboard load failed" });
   }
 };
