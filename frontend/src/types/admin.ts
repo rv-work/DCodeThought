@@ -3,6 +3,8 @@ export type AdminDashboardResponse = {
   stats: {
     users: number;
     problems: number;
+    solutions: number;
+    contests: number;
   };
   recentReports: {
     _id: string;

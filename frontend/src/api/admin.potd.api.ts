@@ -10,7 +10,12 @@ export const addAdminPotd = async (data: {
   problemId: string;
   potdDate: string;
 }) => {
-  const res = await api.post("/api/admin/potd/add", data);
+  const payload = {
+    ...data,
+    potdDate: new Date(data.potdDate).toISOString(),
+  };
+
+  const res = await api.post("/api/admin/potd/add", payload);
   return res.data;
 };
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar/Navbar";
-import { getRequests } from "@/api/request.api";
+import { getRequests, toggleRequestVote } from "@/api/request.api";
 import type { PublicRequest } from "@/types/request";
 import RequestTabs from "@/components/requests/RequestTabs";
 import RequestCard from "@/components/requests/RequestCard";
@@ -15,10 +15,21 @@ export default function RequestsPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    getRequests(type).then((res) =>
-      setRequests(res.requests)
-    );
+    getRequests(type).then((res) => setRequests(res.requests));
   }, [type]);
+
+  const handleVote = async (id: string) => {
+    const res = await toggleRequestVote(id);
+
+    // update frontend state instantly
+    setRequests((prev) =>
+      prev.map((r) =>
+        r._id === id
+          ? { ...r, votes: Array(res.votes).fill("x") } // fake vote list length
+          : r
+      )
+    );
+  };
 
   return (
     <>
@@ -33,7 +44,7 @@ export default function RequestsPage() {
 
         <div className="space-y-3">
           {requests.map((r) => (
-            <RequestCard key={r._id} request={r} />
+            <RequestCard key={r._id} request={r} onVote={handleVote} />
           ))}
         </div>
       </div>

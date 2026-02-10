@@ -25,5 +25,6 @@ import type { ProblemDetail } from "@/types/problem";
 
 export const getProblemDetailBySlug = async (slug: string) => {
   const res = await api.get(`/api/problems/${slug}`);
+  console.log("res :", res.data);
   return res.data as { success: boolean; problem: ProblemDetail };
 };

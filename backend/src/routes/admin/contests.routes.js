@@ -8,12 +8,16 @@ import {
   getAllContestsAdmin,
   addContestAdmin,
   deleteContestAdmin,
+  getAvailableContestProblems,
 } from "../../controllers/admin/contests.controller.js";
 
 const router = express.Router();
 
 router.use(protect, adminOnly);
 
+
+
+router.get("/available-problems",getAvailableContestProblems);
 router.get("/", getAllContestsAdmin);
 router.post("/add", validate(addContestSchema), addContestAdmin);
 router.delete("/:id", deleteContestAdmin);

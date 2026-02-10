@@ -1,3 +1,5 @@
+import type { PublicProblem } from "./problem";
+
 export type ContestProblem = {
   _id: string;
   problemNumber: number;
@@ -11,8 +13,6 @@ export type Contest = {
   contestDate: string;
   problems: ContestProblem[];
 };
-
-import type { PublicProblem } from "./problem";
 
 export type PublicContest = {
   contestNumber: number;

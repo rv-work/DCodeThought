@@ -7,20 +7,35 @@ import {
 } from "@/api/admin.request.api";
 import type { AdminRequest } from "@/types/request";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminLoading from "@/components/admin/AdminLoading";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
 
 export default function AdminRequestsPage() {
   const [requests, setRequests] = useState<AdminRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAdminRequests().then((res) => setRequests(res.requests));
+    getAdminRequests().then((res) => {
+      setRequests(res.requests);
+      setLoading(false);
+    });
   }, []);
 
   return (
-    <div>
+    <div className="space-y-4">
       <AdminPageHeader title="Requests" />
 
-      <div className="space-y-3">
-        {requests.map((r) => (
+      {loading && <AdminLoading text="Loading requests..." />}
+
+      {!loading && requests.length === 0 && (
+        <AdminEmptyState
+          title="No requests"
+          description="Users haven’t raised any requests yet."
+        />
+      )}
+
+      {!loading &&
+        requests.map((r) => (
           <div
             key={r._id}
             className={`border p-3 flex justify-between ${r.completed ? "opacity-60" : ""
@@ -52,7 +67,6 @@ export default function AdminRequestsPage() {
             />
           </div>
         ))}
-      </div>
     </div>
   );
 }

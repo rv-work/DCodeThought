@@ -12,7 +12,7 @@ export default function ProblemForm() {
     title: "",
     leetcodeLink: "",
     difficulty: "Easy",
-    type: "normal",
+    type: "potd",
   });
 
   const submit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export default function ProblemForm() {
           className="select-field"
           onChange={(e) => setForm({ ...form, type: e.target.value })}
         >
-          <option value="normal">Normal</option>
+          <option value="" disabled>Select Type</option>
           <option value="potd">POTD</option>
           <option value="contest">Contest</option>
           <option value="requested">Requested</option>

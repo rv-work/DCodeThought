@@ -1,3 +1,4 @@
+// models/Solution.js
 import mongoose from "mongoose";
 
 const CodeBlockSchema = new mongoose.Schema(
@@ -6,9 +7,8 @@ const CodeBlockSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      lowercase: true, // java, cpp, python
+      lowercase: true,
     },
-
     code: {
       type: String,
       required: true,
@@ -24,32 +24,22 @@ const SolutionSchema = new mongoose.Schema({
     required: true,
   },
 
-  // Hints
-  hints: [
-    {
-      type: String,
-      trim: true,
-    },
-  ],
+  hints: [{ type: String, trim: true }],
 
   myThought: {
     type: String,
     required: true,
   },
 
-  engThought: {
-    type: String,
-  },
+  engThought: String,
 
-  // ✅ Dynamic languages (ORDERED)
+  // 👇 DB shape
   codeBlocks: {
     type: [CodeBlockSchema],
     default: [],
   },
 
-  youtubeLink: {
-    type: String,
-  },
+  youtubeLink: String,
 
   createdAt: {
     type: Date,

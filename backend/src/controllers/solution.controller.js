@@ -17,10 +17,15 @@ export const getSolutionByProblemSlug = async (req, res) => {
       return res.status(404).json({ message: "Problem not found" });
     }
 
+    console.log("pid : " , problem._id)
+
     const solution = await Solution.findOne({ problemId: problem._id }).lean();
     if (!solution) {
       return res.json({ success: true, solution: null });
     }
+
+
+    console.log("sol : " , solution)
 
     await cacheSet(cacheKey, solution, 3600);
 

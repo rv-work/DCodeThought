@@ -27,10 +27,7 @@ export const getPublicProblems = async (req, res) => {
     if (difficulty) query.difficulty = difficulty;
     if (type) query.type = type;
 
-    const sortQuery =
-      sort === "oldest"
-        ? { addedAt: 1 }
-        : { addedAt: -1 };
+    const sortQuery = sort === "oldest" ? { addedAt: 1 } : { addedAt: -1 };
 
     const cacheKey = `problems:${page}:${limit}:${search}:${difficulty}:${type}:${sort}`;
     const cached = await cacheGet(cacheKey);
@@ -44,9 +41,7 @@ export const getPublicProblems = async (req, res) => {
         .sort(sortQuery)
         .skip(skip)
         .limit(Number(limit))
-        .select(
-          "problemNumber title difficulty type tags addedAt"
-        ),
+        .select("problemNumber title difficulty slug type tags addedAt"),
       Problem.countDocuments(query),
     ]);
 
@@ -61,10 +56,12 @@ export const getPublicProblems = async (req, res) => {
     await cacheSet(cacheKey, payload, 3600);
 
     res.json(payload);
-  } catch {
+  } catch (err) {
     res.status(500).json({ message: "Failed to load problems" });
   }
 };
+
+
 
 
 
@@ -88,7 +85,7 @@ export const getProblemDetail = async (req, res) => {
     await cacheSet(cacheKey, problem, 3600);
 
     res.json({ success: true, problem });
-  } catch {
+  } catch (err) {
     res.status(500).json({ message: "Failed to load problem" });
   }
 };

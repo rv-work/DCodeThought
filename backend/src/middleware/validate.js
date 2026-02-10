@@ -1,18 +1,27 @@
-import { ZodError } from "zod";
+export const validate = (schema) => (req, res, next) => {
+  try {
+    const result = schema.safeParse
+      ? schema.safeParse(req.body) // ZOD
+      : schema.validate(req.body); // JOI
 
-export const validate = (schema) => {
-  return (req, res, next) => {
-    try {
-      req.body = schema.parse(req.body);
-      next();
-    } catch (err) {
-      if (err instanceof ZodError) {
-        return res.status(400).json({
-          success: false,
-          message: err.errors[0].message,
-        });
-      }
-      next(err);
+    // ZOD
+    if (result?.success === false) {
+      return res.status(400).json({
+        message: result.error.errors[0].message,
+      });
     }
-  };
+
+    // JOI
+    if (result?.error) {
+      return res.status(400).json({
+        message: result.error.details?.[0]?.message || "Validation error",
+      });
+    }
+
+    next();
+  } catch (err) {
+    return res.status(400).json({
+      message: "Invalid request data",
+    });
+  }
 };

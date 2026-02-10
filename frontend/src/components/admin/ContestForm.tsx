@@ -11,12 +11,13 @@ export default function ContestForm() {
   const [form, setForm] = useState({
     contestNumber: 0,
     contestName: "",
-    contestDate: "",
+    contestDate: "", // ISO string rahegi
     problems: ["", "", "", ""],
   });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     await addAdminContest(form);
     router.push("/admin/contests");
   };
@@ -38,10 +39,14 @@ export default function ContestForm() {
         }
       />
 
+      {/* 🔥 IMPORTANT FIX */}
       <input
         type="datetime-local"
         onChange={(e) =>
-          setForm({ ...form, contestDate: e.target.value })
+          setForm({
+            ...form,
+            contestDate: new Date(e.target.value).toISOString(),
+          })
         }
       />
 

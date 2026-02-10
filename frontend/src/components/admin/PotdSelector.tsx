@@ -17,9 +17,10 @@ export default function PotdSelector({
   const [problems, setProblems] = useState<ProblemOption[]>([]);
 
   useEffect(() => {
-    api.get("/api/admin/problems").then((res) => {
-      setProblems(res.data.problems);
-    });
+    api.get("/api/admin/potd/available-problems")
+      .then((res) => {
+        setProblems(res.data.problems);
+      });
   }, []);
 
   return (

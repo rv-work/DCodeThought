@@ -1,8 +1,9 @@
 export type PotdProblem = {
-  problemNumber: number;
-  title: string;
-  slug: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  tags: string[];
-  potdDate: string;
+  _id: string;
+  date: string;
+  problem: {
+    _id: string;
+    problemNumber: number;
+    title: string;
+  };
 };

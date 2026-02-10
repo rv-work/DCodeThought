@@ -1,9 +1,9 @@
 import api from "./axios";
-import type { Problem } from "@/types/problem";
+import type { PublicProblem } from "@/types/problem";
 
 export const getAdminProblems = async () => {
   const res = await api.get("/api/admin/problems");
-  return res.data as { success: boolean; problems: Problem[] };
+  return res.data as { success: boolean; problems: PublicProblem[] };
 };
 
 export const addAdminProblem = async (data: unknown) => {

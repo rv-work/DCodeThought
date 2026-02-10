@@ -9,7 +9,7 @@ export const addProblemSchema = z.object({
 
   difficulty: z.enum(["Easy", "Medium", "Hard"]),
 
-  type: z.enum(["normal", "potd", "contest", "requested"]),
+  type: z.enum(["potd", "contest", "requested"]),
 
   // POTD
   potdDate: z.string().datetime().optional().nullable(),

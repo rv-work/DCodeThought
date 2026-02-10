@@ -1,3 +1,4 @@
+// validators/solution.validation.ts
 import { z } from "zod";
 
 export const solutionSchema = z.object({
@@ -8,6 +9,7 @@ export const solutionSchema = z.object({
 
   hints: z.array(z.string()).default([]),
 
+  // frontend shape
   code: z.record(z.string(), z.string()).optional(),
 
   youtubeLink: z.string().url().optional(),

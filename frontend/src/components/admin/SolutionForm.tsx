@@ -26,7 +26,7 @@ export default function SolutionForm() {
   });
 
   useEffect(() => {
-    api.get("/api/admin/problems").then((res) => {
+    api.get("/api/admin/solutions/available-problems").then((res) => {
       setProblems(res.data.problems);
     });
   }, []);

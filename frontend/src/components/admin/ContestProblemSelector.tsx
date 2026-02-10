@@ -19,10 +19,13 @@ export default function ContestProblemSelector({
   const [problems, setProblems] = useState<ProblemOption[]>([]);
 
   useEffect(() => {
-    api.get("/api/admin/problems").then((res) => {
-      setProblems(res.data.problems);
-    });
+    api
+      .get("/api/admin/contests/available-problems")
+      .then((res) => {
+        setProblems(res.data.problems);
+      });
   }, []);
+
 
   const update = (index: number, id: string) => {
     const next = [...value];
@@ -39,8 +42,13 @@ export default function ContestProblemSelector({
           onChange={(e) => update(i, e.target.value)}
         >
           <option value="">Select Problem {i + 1}</option>
+
           {problems.map((p) => (
-            <option key={p._id} value={p._id}>
+            <option
+              key={p._id}
+              value={p._id}
+              disabled={value.includes(p._id)} // 🔥 duplicate block
+            >
               #{p.problemNumber} — {p.title}
             </option>
           ))}

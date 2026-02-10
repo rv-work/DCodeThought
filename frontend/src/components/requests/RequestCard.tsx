@@ -1,14 +1,14 @@
 "use client";
 
 import type { PublicRequest } from "@/types/request";
-import { toggleRequestVote } from "@/api/request.api";
 import { useAuth } from "@/hooks/useAuth";
 
 type Props = {
   request: PublicRequest;
+  onVote: (id: string) => void;
 };
 
-export default function RequestCard({ request }: Props) {
+export default function RequestCard({ request, onVote }: Props) {
   const { user } = useAuth();
   const votesCount = request.votes.length;
 
@@ -21,9 +21,7 @@ export default function RequestCard({ request }: Props) {
         <span>Votes: {votesCount}</span>
 
         {request.type === "question" && votesCount >= 50 && (
-          <span className="text-green-600">
-            Eligible (Admin Todo)
-          </span>
+          <span className="text-green-600">Eligible (Admin Todo)</span>
         )}
 
         {request.completed && (
@@ -32,7 +30,7 @@ export default function RequestCard({ request }: Props) {
 
         {user && !request.completed && (
           <button
-            onClick={() => toggleRequestVote(request._id)}
+            onClick={() => onVote(request._id)}
             className="underline"
           >
             Upvote

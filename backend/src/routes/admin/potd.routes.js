@@ -8,6 +8,7 @@ import {
   getAllPotdAdmin,
   addPotdAdmin,
   removePotdAdmin,
+  getAvailableProblemsForPotd,
 } from "../../controllers/admin/potd.controller.js";
 
 const router = express.Router();
@@ -16,6 +17,8 @@ router.use(protect, adminOnly);
 
 router.get("/", getAllPotdAdmin);
 router.post("/add", validate(addPotdSchema), addPotdAdmin);
-router.delete("/:problemId", removePotdAdmin);
+router.delete("/:potdId", removePotdAdmin);
+router.get("/available-problems", getAvailableProblemsForPotd);
+
 
 export default router;

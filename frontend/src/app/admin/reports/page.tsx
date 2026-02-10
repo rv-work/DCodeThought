@@ -1,35 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getAdminReports,
-  updateReportStatus,
-} from "@/api/admin.report.api";
+import { getAdminReports, updateReportStatus } from "@/api/admin.report.api";
 import type { AdminReport } from "@/types/report";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminLoading from "@/components/admin/AdminLoading";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<AdminReport[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAdminReports().then((res) => setReports(res.reports));
+    getAdminReports().then((res) => {
+      setReports(res.reports);
+      setLoading(false);
+    });
   }, []);
 
   const toggle = async (id: string, resolved: boolean) => {
     await updateReportStatus(id, resolved);
     setReports((prev) =>
-      prev.map((r) =>
-        r._id === id ? { ...r, resolved } : r
-      )
+      prev.map((r) => (r._id === id ? { ...r, resolved } : r))
     );
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <AdminPageHeader title="Reports" />
 
-      <div className="space-y-3">
-        {reports.map((r) => (
+      {loading && <AdminLoading text="Loading reports..." />}
+
+      {!loading && reports.length === 0 && (
+        <AdminEmptyState
+          title="No reports"
+          description="All good! No reports right now."
+        />
+      )}
+
+      {!loading &&
+        reports.map((r) => (
           <div
             key={r._id}
             className={`border p-3 flex justify-between ${r.resolved ? "opacity-60" : ""
@@ -46,13 +56,10 @@ export default function AdminReportsPage() {
             <input
               type="checkbox"
               checked={r.resolved}
-              onChange={(e) =>
-                toggle(r._id, e.target.checked)
-              }
+              onChange={(e) => toggle(r._id, e.target.checked)}
             />
           </div>
         ))}
-      </div>
     </div>
   );
 }
