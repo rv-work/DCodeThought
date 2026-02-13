@@ -7,7 +7,7 @@ export default function MyReports({ reports }: { reports: MyReport[] }) {
     <div className="rounded-2xl bg-background-secondary border border-border-subtle p-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white shadow-lg">
+        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center text-white shadow-lg">
           <AlertCircle className="w-5 h-5" />
         </div>
         <div>
@@ -44,7 +44,7 @@ export default function MyReports({ reports }: { reports: MyReport[] }) {
                 className="flex items-center gap-2 text-sm text-accent hover:underline cursor-pointer group"
               >
                 <span className="truncate">{r.problemId.title}</span>
-                <ExternalLink className="w-3 h-3 flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ExternalLink className="w-3 h-3 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
             </div>
           ))}

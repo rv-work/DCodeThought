@@ -37,7 +37,7 @@ export default function CommentForm({ placeholder, onSubmit }: Props) {
         <button
           onClick={handleSubmit}
           disabled={loading || !text.trim()}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
         >
           {loading ? (
             <>

@@ -12,6 +12,7 @@ export type UserProfile = {
 export type RecentView = {
   problemId: PublicProblem;
   viewedAt: string;
+  difficulty: "Easy" | "Medium" | "Hard";
 };
 
 export type MyReport = {

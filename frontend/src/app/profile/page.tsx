@@ -104,7 +104,7 @@ export default function ProfilePage() {
             className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up"
             style={{ animationDelay: "0.1s" }}
           >
-            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 p-6">
+            <div className="rounded-2xl bg-linear-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted">Recent Views</span>
                 <TrendingUp className="w-5 h-5 text-blue-500" />
@@ -112,7 +112,7 @@ export default function ProfilePage() {
               <div className="text-3xl font-bold">{recent.length}</div>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 p-6">
+            <div className="rounded-2xl bg-linear-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted">My Requests</span>
                 <TrendingUp className="w-5 h-5 text-purple-500" />
@@ -120,7 +120,7 @@ export default function ProfilePage() {
               <div className="text-3xl font-bold">{requests.length}</div>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 p-6">
+            <div className="rounded-2xl bg-linear-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted">My Reports</span>
                 <TrendingUp className="w-5 h-5 text-orange-500" />

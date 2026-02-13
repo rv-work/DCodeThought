@@ -19,8 +19,9 @@ export default function ReplyItem({ reply, commentId }: Props) {
       const value = type === "up" ? 1 : -1;
       setLocalReply((prev) => ({
         ...prev,
-        votes: [...prev.votes, { userId: "temp" as any, value }],
+        votes: [...prev.votes, { userId: "temp", value }],
       }));
+
     } catch (error) {
       console.error("Vote failed:", error);
     }
@@ -30,7 +31,7 @@ export default function ReplyItem({ reply, commentId }: Props) {
     <div className="rounded-lg bg-background-secondary border border-border p-4">
       {/* Reply Header */}
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shrink-0">
           <User className="w-4 h-4" />
         </div>
 
@@ -38,7 +39,7 @@ export default function ReplyItem({ reply, commentId }: Props) {
           <div className="font-semibold text-xs mb-1">
             {reply.userId.name}
           </div>
-          <p className="text-sm leading-relaxed break-words">{reply.text}</p>
+          <p className="text-sm leading-relaxed wrap-break-word">{reply.text}</p>
         </div>
       </div>
 

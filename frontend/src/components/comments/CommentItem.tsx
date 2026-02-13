@@ -26,7 +26,7 @@ export default function CommentItem({ comment, isLoggedIn }: Props) {
       const value = type === "up" ? 1 : -1;
       setLocalComment((prev) => ({
         ...prev,
-        votes: [...prev.votes, { userId: "temp" as any, value }],
+        votes: [...prev.votes, { userId: "temp", value }],
       }));
     } catch (error) {
       console.error("Vote failed:", error);
@@ -44,7 +44,7 @@ export default function CommentItem({ comment, isLoggedIn }: Props) {
     <div className="rounded-xl bg-background-tertiary border border-border p-6 hover:shadow-lg transition-all">
       {/* Comment Header */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-white flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-accent to-purple-500 flex items-center justify-center text-white shrink-0">
           <User className="w-5 h-5" />
         </div>
 
@@ -52,7 +52,7 @@ export default function CommentItem({ comment, isLoggedIn }: Props) {
           <div className="font-semibold text-sm mb-1">
             {comment.userId.name}
           </div>
-          <p className="text-sm leading-relaxed break-words">{comment.text}</p>
+          <p className="text-sm leading-relaxed wrap-break-word">{comment.text}</p>
         </div>
       </div>
 

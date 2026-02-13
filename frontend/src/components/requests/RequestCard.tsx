@@ -18,7 +18,7 @@ export default function RequestCard({ request, onVote }: Props) {
     <div className="group rounded-2xl bg-background-secondary border border-border-subtle p-6 hover:shadow-xl transition-all">
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-white flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-accent to-purple-500 flex items-center justify-center text-white shrink-0">
           <User className="w-5 h-5" />
         </div>
 
@@ -27,7 +27,7 @@ export default function RequestCard({ request, onVote }: Props) {
             <h3 className="font-bold text-lg">{request.title}</h3>
 
             {/* Status badges */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {request.completed && (
                 <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-green-500/10 text-green-500 text-xs font-semibold">
                   <CheckCircle2 className="w-3 h-3" />
@@ -63,7 +63,7 @@ export default function RequestCard({ request, onVote }: Props) {
             {user && !request.completed && (
               <button
                 onClick={() => onVote(request._id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-linear-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group"
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>Upvote</span>

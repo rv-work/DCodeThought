@@ -35,9 +35,9 @@ export default function PotdHistory() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border" />
+        <div className="h-px flex-1 bg-linear-to-r from-transparent via-border to-border" />
         <h2 className="text-2xl font-bold">Past Challenges</h2>
-        <div className="h-px flex-1 bg-gradient-to-r from-border via-border to-transparent" />
+        <div className="h-px flex-1 bg-linear-to-r from-border via-border to-transparent" />
       </div>
 
       {/* POTD List */}
@@ -49,8 +49,8 @@ export default function PotdHistory() {
             className="group relative block rounded-2xl bg-background-secondary border border-border-subtle p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden animate-fade-in-up opacity-0"
             style={{ animationDelay: `${idx * 0.05}s` }}
           >
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* linear overlay */}
+            <div className="absolute inset-0 bg-linear-to-br from-accent/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             {/* Content */}
             <div className="relative flex items-center justify-between gap-4">
@@ -80,7 +80,7 @@ export default function PotdHistory() {
                 {/* Difficulty */}
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-background-tertiary border border-border">
                   <div
-                    className={`w-2 h-2 rounded-full bg-gradient-to-r ${difficultyColors[p.difficulty as keyof typeof difficultyColors]
+                    className={`w-2 h-2 rounded-full bg-linear-to-r ${difficultyColors[p.difficulty as keyof typeof difficultyColors]
                       }`}
                   />
                   {p.difficulty}

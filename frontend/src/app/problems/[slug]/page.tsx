@@ -51,7 +51,7 @@ export default function ProblemDetailPage() {
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-2">Problem Not Found</h2>
             <p className="text-muted mb-6">
-              The problem you're looking for doesn't exist
+              The problem you&apos;re looking for doesn&apos;t exist
             </p>
             <Link
               href="/problems"

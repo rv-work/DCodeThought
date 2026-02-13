@@ -33,7 +33,7 @@ export default function RequestForm() {
       {/* Success Message */}
       {submitted && (
         <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
           <div className="text-sm font-medium text-green-500">
             Request submitted! The community will vote on it.
           </div>
@@ -89,7 +89,7 @@ export default function RequestForm() {
         <button
           onClick={submit}
           disabled={loading || !title.trim() || !description.trim()}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-r from-accent to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
         >
           {loading ? (
             <>

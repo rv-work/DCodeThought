@@ -15,7 +15,7 @@ const typeColors = {
 
 export default function ProblemHeader({ problem }: { problem: ProblemDetail }) {
   return (
-    <div className="relative rounded-3xl bg-gradient-to-br from-accent/10 via-purple-500/10 to-pink-500/10 border border-accent/20 p-10 overflow-hidden">
+    <div className="relative rounded-3xl bg-linear-to-br from-accent/10 via-purple-500/10 to-pink-500/10 border border-accent/20 p-10 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
@@ -29,7 +29,7 @@ export default function ProblemHeader({ problem }: { problem: ProblemDetail }) {
           </div>
 
           <div
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${typeColors[problem.type as keyof typeof typeColors]
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-linear-to-r ${typeColors[problem.type as keyof typeof typeColors]
               } text-white text-sm font-semibold shadow-lg capitalize`}
           >
             {problem.type}
@@ -37,7 +37,7 @@ export default function ProblemHeader({ problem }: { problem: ProblemDetail }) {
 
           <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-secondary border border-border text-sm font-semibold">
             <div
-              className={`w-2 h-2 rounded-full bg-gradient-to-r ${difficultyColors[problem.difficulty as keyof typeof difficultyColors]
+              className={`w-2 h-2 rounded-full bg-linear-to-r ${difficultyColors[problem.difficulty as keyof typeof difficultyColors]
                 }`}
             />
             {problem.difficulty}

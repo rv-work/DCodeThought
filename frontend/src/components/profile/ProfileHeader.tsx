@@ -3,14 +3,14 @@ import { User, Mail, Calendar } from "lucide-react";
 
 export default function ProfileHeader({ user }: { user: UserProfile }) {
   return (
-    <div className="relative rounded-3xl bg-gradient-to-br from-accent/10 via-purple-500/10 to-pink-500/10 border border-accent/20 p-10 overflow-hidden">
+    <div className="relative rounded-3xl bg-linear-to-br from-accent/10 via-purple-500/10 to-pink-500/10 border border-accent/20 p-10 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
 
       <div className="relative flex items-start gap-6">
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-white shadow-2xl flex-shrink-0">
+        <div className="w-24 h-24 rounded-2xl bg-linear-to-br from-accent to-purple-500 flex items-center justify-center text-white shadow-2xl shrink-0">
           <User className="w-12 h-12" />
         </div>
 

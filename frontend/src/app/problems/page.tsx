@@ -23,11 +23,27 @@ export default function ProblemsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    getProblems(filters)
-      .then(setData)
-      .finally(() => setLoading(false));
+    let isMounted = true;
+
+    const fetchProblems = async () => {
+      try {
+        setLoading(true);
+        const result = await getProblems(filters);
+        if (isMounted) setData(result);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchProblems();
+
+    return () => {
+      isMounted = false;
+    };
   }, [filters]);
+
 
   return (
     <>

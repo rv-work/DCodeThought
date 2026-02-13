@@ -22,7 +22,7 @@ export default function ContestProblems({
           className="group relative block rounded-2xl bg-background-secondary border border-border-subtle p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
         >
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-linear-to-br from-accent/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Content */}
           <div className="relative flex items-start justify-between gap-4">
@@ -46,7 +46,7 @@ export default function ContestProblems({
               {/* Difficulty Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-background-tertiary border border-border">
                 <div
-                  className={`w-2 h-2 rounded-full bg-gradient-to-r ${difficultyColors[p.difficulty as keyof typeof difficultyColors]
+                  className={`w-2 h-2 rounded-full bg-linear-to-r ${difficultyColors[p.difficulty as keyof typeof difficultyColors]
                     }`}
                 />
                 {p.difficulty}

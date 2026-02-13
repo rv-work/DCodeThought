@@ -18,11 +18,16 @@ export default function RequestsPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    setLoading(true);
-    getRequests(type)
-      .then((res) => setRequests(res.requests))
-      .finally(() => setLoading(false));
+    const fetchRequests = async () => {
+      setLoading(true);
+      const res = await getRequests(type);
+      setRequests(res.requests);
+      setLoading(false);
+    };
+
+    fetchRequests();
   }, [type]);
+
 
   const handleVote = async (id: string) => {
     const res = await toggleRequestVote(id);

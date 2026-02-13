@@ -43,7 +43,7 @@ export default function ReportProblem({ slug }: Props) {
     <div className="rounded-2xl bg-background-secondary border border-border-subtle p-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white shadow-lg">
+        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center text-white shadow-lg">
           <AlertCircle className="w-5 h-5" />
         </div>
         <div>
@@ -57,9 +57,9 @@ export default function ReportProblem({ slug }: Props) {
       {/* Success Message */}
       {submitted && (
         <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
           <div className="text-sm font-medium text-green-500">
-            Report submitted successfully! We'll review it soon.
+            Report submitted successfully! We&apos;ll review it soon.
           </div>
         </div>
       )}
@@ -107,7 +107,7 @@ export default function ReportProblem({ slug }: Props) {
           <button
             onClick={submit}
             disabled={loading || !title.trim() || !description.trim()}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
           >
             {loading ? (
               <>

@@ -73,9 +73,9 @@ export default function PotdPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="mb-12 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
-              <h2 className="text-2xl font-bold">Today's Challenge</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-border via-border to-transparent" />
+              <div className="h-px flex-1 bg-linear-to-r from-transparent via-border to-transparent" />
+              <h2 className="text-2xl font-bold">Today&apos;s Challenge</h2>
+              <div className="h-px flex-1 bg-linear-to-r from-border via-border to-transparent" />
             </div>
 
             {loading ? (

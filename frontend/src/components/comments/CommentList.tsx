@@ -33,7 +33,7 @@ export default function CommentList({ slug }: Props) {
     <div className="rounded-2xl bg-background-secondary border border-border-subtle p-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg">
+        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg">
           <MessageSquare className="w-5 h-5" />
         </div>
         <div>

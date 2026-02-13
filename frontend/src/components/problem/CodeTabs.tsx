@@ -36,13 +36,13 @@ export default function CodeTabs({ code }: { code: Record<string, string> }) {
               key={lang}
               onClick={() => setActive(lang)}
               className={`relative px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${isActive
-                  ? "text-white shadow-lg"
-                  : "bg-background-tertiary border border-border text-muted hover:text-foreground hover:border-accent"
+                ? "text-white shadow-lg"
+                : "bg-background-tertiary border border-border text-muted hover:text-foreground hover:border-accent"
                 }`}
             >
               {isActive && (
                 <div
-                  className={`absolute inset-0 rounded-lg bg-gradient-to-r ${gradient}`}
+                  className={`absolute inset-0 rounded-lg bg-linear-to-r ${gradient}`}
                 />
               )}
               <span className="relative">{lang}</span>
