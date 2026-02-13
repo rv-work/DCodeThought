@@ -11,6 +11,7 @@ import type {
   ProblemListResponse,
 } from "@/types/problem";
 import Navbar from "@/components/navbar/Navbar";
+import { Code2, Filter } from "lucide-react";
 
 export default function ProblemsPage() {
   const [filters, setFilters] = useState<ProblemFiltersType>({
@@ -23,35 +24,45 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     setLoading(true);
-    getProblems(filters).then((res) => {
-      setData(res);
-      setLoading(false);
-    });
+    getProblems(filters)
+      .then(setData)
+      .finally(() => setLoading(false));
   }, [filters]);
 
   return (
     <>
       <Navbar />
 
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-accent/5 via-purple-500/5 to-pink-500/5 border-b border-border-subtle">
-          <div className="max-w-7xl mx-auto px-6 py-16">
-            <div className="text-center space-y-4 animate-fade-in-up">
-              <h1 className="text-4xl md:text-5xl font-bold">
-                All Problems
-              </h1>
-              <p className="text-muted text-lg max-w-2xl mx-auto">
-                Master problem-solving with our comprehensive collection of LeetCode problems
-              </p>
+      <div className="min-h-screen bg-background py-12">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto px-6 mb-12">
+          <div className="text-center space-y-6 animate-fade-in-up">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-semibold">
+              <Code2 className="w-4 h-4" />
+              All Problems
             </div>
+
+            {/* Title */}
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Problem Library
+            </h1>
+
+            {/* Description */}
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              Browse through all solved problems with detailed Java-first explanations
+            </p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl mx-auto px-6">
           {/* Filters */}
-          <div className="mb-8 animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s' }}>
+          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+            <div className="flex items-center gap-2 mb-4 text-sm text-muted">
+              <Filter className="w-4 h-4" />
+              <span>Filter & Sort</span>
+            </div>
             <ProblemFilters
               onChange={(f) =>
                 setFilters((prev) => ({
@@ -63,46 +74,25 @@ export default function ProblemsPage() {
             />
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center py-20">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-border"></div>
-                <div className="w-16 h-16 rounded-full border-4 border-accent border-t-transparent absolute top-0 left-0 animate-spin"></div>
-              </div>
-            </div>
-          )}
-
           {/* Problems Grid */}
-          {!loading && data && (
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="h-48 rounded-2xl bg-background-secondary border border-border-subtle animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s' }}>
-                {data.problems.map((p: PublicProblem, idx) => (
-                  <div
-                    key={p._id}
-                    className="animate-fade-in-up opacity-0"
-                    style={{ animationDelay: `${0.1 * (idx % 6)}s` }}
-                  >
-                    <ProblemCard problem={p} />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+                {data?.problems.map((p: PublicProblem) => (
+                  <ProblemCard key={p._id} problem={p} />
                 ))}
               </div>
 
-              {/* Empty State */}
-              {data.problems.length === 0 && (
-                <div className="text-center py-20 animate-fade-in">
-                  <div className="w-20 h-20 rounded-2xl bg-muted/10 flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">No problems found</h3>
-                  <p className="text-muted">Try adjusting your filters</p>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {data.totalPages > 1 && (
+              {data && data.totalPages > 0 && (
                 <div className="mt-12">
                   <Pagination
                     page={data.page}
@@ -114,6 +104,18 @@ export default function ProblemsPage() {
                       }))
                     }
                   />
+                </div>
+              )}
+
+              {data && data.problems.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/10 mb-6">
+                    <Code2 className="w-10 h-10 text-accent" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No Problems Found</h3>
+                  <p className="text-muted">
+                    Try adjusting your filters or search criteria
+                  </p>
                 </div>
               )}
             </>
