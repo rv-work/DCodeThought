@@ -8,12 +8,28 @@ export default function LoginForm() {
   const { login } = useAuth();
 
   return (
-    <div className="space-y-6 max-w-sm mx-auto bg-background-secondary/40 backdrop-blur-xl border border-border-subtle rounded-2xl p-8 shadow-lg animate-scale-in">
-      <GoogleAuthButton />
+    <div className="space-y-6">
+      {/* Google Auth */}
+      <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s' }}>
+        <GoogleAuthButton />
+      </div>
 
-      <div className="text-center text-muted text-sm">or login with email</div>
+      {/* Divider */}
+      <div className="relative animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s' }}>
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border"></div>
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="px-3 py-1 rounded bg-background-secondary text-muted uppercase tracking-wide">
+            Or continue with email
+          </span>
+        </div>
+      </div>
 
-      <EmailAuthForm mode="login" onSubmit={login} />
+      {/* Email Form */}
+      <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s' }}>
+        <EmailAuthForm mode="login" onSubmit={login} />
+      </div>
     </div>
   );
 }

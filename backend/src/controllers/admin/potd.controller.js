@@ -10,11 +10,50 @@ export const getAllPotdAdmin = async (req, res) => {
       .populate("problem")
       .sort({ date: -1 });
 
+
     res.json({ success: true, potds });
   } catch {
     res.status(500).json({ message: "Failed to load POTDs" });
   }
 };
+
+
+
+export const getSinglePotdAdmin = async (req, res) => {
+  try {
+
+    const potd = await Potd.findById(req.params.potdId).populate("problem");
+
+    if (!potd) {
+      return res.status(404).json({ message: "POTD not found" });
+    }
+
+
+    res.json({ success: true, potd });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch POTD" });
+  }
+};
+
+export const updatePotdAdmin = async (req, res) => {
+  try {
+    const { problemId, potdDate } = req.body;
+
+    const updated = await Potd.findByIdAndUpdate(
+      req.params.potdId,
+      {
+        problem: problemId,
+        date: potdDate,
+      },
+      { new: true }
+    ).populate("problem");
+
+    res.json({ success: true, potd: updated });
+  } catch {
+    res.status(500).json({ message: "Update POTD failed" });
+  }
+};
+
 
 /**
  * ADD POTD
@@ -22,7 +61,6 @@ export const getAllPotdAdmin = async (req, res) => {
 export const addPotdAdmin = async (req, res) => {
   try {
 
-    console.log("1")
     const { problemId, potdDate } = req.body;
 
     // ensure date uniqueness
@@ -57,13 +95,19 @@ export const removePotdAdmin = async (req, res) => {
 
 // GET /api/admin/potd/available-problems
 export const getAvailableProblemsForPotd = async (req, res) => {
-  const potds = await Potd.find().select("problem");
-  const usedProblemIds = potds.map((p) => p.problem);
+  try {
+    const potds = await Potd.find().select("problem");
+    const usedProblemIds = potds.map((p) => p.problem);
 
-  const problems = await Problem.find({
-    _id: { $nin: usedProblemIds },
-  });
+    const problems = await Problem.find({
+      _id: { $nin: usedProblemIds },
+      type: "potd", // ✅ Only POTD type problems
+    }).sort({ problemNumber: 1 });
 
-  res.json({ success: true, problems });
+    res.json({ success: true, problems });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load available problems" });
+  }
 };
+
 

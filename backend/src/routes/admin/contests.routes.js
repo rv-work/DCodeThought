@@ -8,18 +8,21 @@ import {
   getAllContestsAdmin,
   addContestAdmin,
   deleteContestAdmin,
-  getAvailableContestProblems,
+  updateContestAdmin,
+  getSingleContestAdmin,
+  getContestProblems,
 } from "../../controllers/admin/contests.controller.js";
 
 const router = express.Router();
 
 router.use(protect, adminOnly);
 
-
-
-router.get("/available-problems",getAvailableContestProblems);
+router.get("/problems", getContestProblems);
 router.get("/", getAllContestsAdmin);
+router.get("/:id", getSingleContestAdmin); // 👈 dynamic after specific
 router.post("/add", validate(addContestSchema), addContestAdmin);
+router.put("/:id", validate(addContestSchema), updateContestAdmin);
 router.delete("/:id", deleteContestAdmin);
+
 
 export default router;

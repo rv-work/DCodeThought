@@ -8,10 +8,24 @@ export default function AdminLoading({
   text = "Loading...",
 }: AdminLoadingProps) {
   return (
-    <div className="border rounded-md p-6 text-center animate-pulse text-muted-foreground">
-      <div className="h-4 w-40 bg-muted mx-auto mb-2 rounded" />
-      <div className="h-3 w-64 bg-muted mx-auto rounded" />
-      <p className="text-xs mt-4">{text}</p>
+    <div className="card text-center animate-fade-in">
+      {/* Animated loader */}
+      <div className="flex justify-center mb-6">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-border"></div>
+          <div className="w-16 h-16 rounded-full border-4 border-accent border-t-transparent absolute top-0 left-0 animate-spin"></div>
+        </div>
+      </div>
+
+      {/* Loading text */}
+      <div className="space-y-3">
+        <div className="text-lg font-semibold">{text}</div>
+        <div className="flex justify-center gap-1">
+          <div className="w-2 h-2 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0s" }}></div>
+          <div className="w-2 h-2 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+          <div className="w-2 h-2 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+        </div>
+      </div>
     </div>
   );
 }

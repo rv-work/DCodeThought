@@ -10,6 +10,20 @@ export const getAllProblemsAdmin = async (req, res) => {
   }
 };
 
+export const getSingleProblemAdmin = async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    res.json({ success: true, problem });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch problem" });
+  }
+};
+
+
 export const addProblemAdmin = async (req, res) => {
   try {
     const data = req.body;

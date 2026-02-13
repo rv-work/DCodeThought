@@ -7,28 +7,43 @@ import Problem from "../../models/Problem.js";
  * - type = contest
  * - not used in any contest yet
  */
-export const getAvailableContestProblems = async (req, res) => {
+export const getContestProblems = async (req, res) => {
   try {
-    // 1️⃣ saare contests se used problem ids nikaalo
-    const contests = await Contest.find().select("problems");
+    const mode = req.query.mode;
 
-    const usedProblemIds = contests.flatMap(
-      (c) => c.problems
-    );
+    if (!mode || !["add", "edit"].includes(mode)) {
+      return res.status(400).json({
+        message: "Mode must be 'add' or 'edit'",
+      });
+    }
 
-    // 2️⃣ sirf contest-type problems jo use nahi hue
-    const problems = await Problem.find({
-      type: "contest",
-      _id: { $nin: usedProblemIds },
-    }).select("problemNumber title");
+    let filter = { type: "contest" };
+
+    if (mode === "add") {
+      // Exclude already used problems
+      const contests = await Contest.find().select("problems");
+
+      const usedProblemIds = contests.flatMap(
+        (c) => c.problems
+      );
+
+      filter._id = { $nin: usedProblemIds };
+    }
+
+    // edit mode → no exclusion
+
+    const problems = await Problem.find(filter)
+      .select("problemNumber title")
+      .sort({ problemNumber: 1 });
 
     res.json({ success: true, problems });
-  } catch (err) {
+  } catch {
     res.status(500).json({
       message: "Failed to load contest problems",
     });
   }
 };
+
 
 export const getAllContestsAdmin = async (req, res) => {
   try {
@@ -57,5 +72,47 @@ export const deleteContestAdmin = async (req, res) => {
     res.json({ success: true });
   } catch {
     res.status(500).json({ message: "Delete contest failed" });
+  }
+};
+
+
+export const getSingleContestAdmin = async (req, res) => {
+  try {
+    const contest = await Contest.findById(req.params.id)
+      .populate("problems", "problemNumber title");
+
+    if (!contest) {
+      return res.status(404).json({ message: "Contest not found" });
+    }
+
+    res.json({ success: true, contest });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch contest" });
+  }
+};
+
+export const updateContestAdmin = async (req, res) => {
+  try {
+
+    const duplicate = await Contest.findOne({
+  _id: { $ne: req.params.id },
+  problems: { $in: req.body.problems },
+});
+
+if (duplicate) {
+  return res.status(400).json({
+    message: "Problem already used in another contest",
+  });
+}
+
+    const updated = await Contest.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    ).populate("problems", "problemNumber title");
+
+    res.json({ success: true, contest: updated });
+  } catch {
+    res.status(500).json({ message: "Update contest failed" });
   }
 };

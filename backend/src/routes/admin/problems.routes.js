@@ -9,6 +9,7 @@ import {
   addProblemAdmin,
   updateProblemAdmin,
   deleteProblemAdmin,
+  getSingleProblemAdmin,
 } from "../../controllers/admin/problems.controller.js";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ const router = express.Router();
 router.use(protect, adminOnly);
 
 router.get("/", getAllProblemsAdmin);
+router.get("/:id", getSingleProblemAdmin);
 router.post("/add", validate(addProblemSchema), addProblemAdmin);
 router.put("/:id", validate(addProblemSchema), updateProblemAdmin);
 router.delete("/:id", deleteProblemAdmin);

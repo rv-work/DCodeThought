@@ -79,3 +79,40 @@ export const deleteSolutionAdmin = async (req, res) => {
     res.status(500).json({ message: "Delete failed" });
   }
 };
+
+
+
+
+
+export const getSingleSolutionAdmin = async (req, res) => {
+  try {
+    const solution = await Solution.findOne({
+      problemId: req.params.problemId,
+    })
+      .populate("problemId", "problemNumber title")
+      .lean();
+
+    if (!solution) {
+      return res.status(404).json({
+        message: "Solution not found",
+      });
+    }
+
+    // normalize DB → frontend
+    const normalized = {
+      ...solution,
+      code: Object.fromEntries(
+        (solution.codeBlocks || []).map((cb) => [
+          cb.language,
+          cb.code,
+        ])
+      ),
+    };
+
+    res.json({ success: true, solution: normalized });
+  } catch {
+    res.status(500).json({
+      message: "Failed to fetch solution",
+    });
+  }
+};

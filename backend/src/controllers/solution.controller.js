@@ -17,7 +17,7 @@ export const getSolutionByProblemSlug = async (req, res) => {
       return res.status(404).json({ message: "Problem not found" });
     }
 
-    console.log("pid : " , problem._id)
+    
 
     const solution = await Solution.findOne({ problemId: problem._id }).lean();
     if (!solution) {

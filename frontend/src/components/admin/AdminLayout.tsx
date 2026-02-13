@@ -10,13 +10,15 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-background">
       <AdminSidebar />
 
-      <div className="flex-1 min-h-screen">
+      <div className="flex-1">
         <AdminHeader />
 
-        <main className="p-6">{children}</main>
+        <main className="p-6 lg:p-8 animate-fade-in">
+          {children}
+        </main>
       </div>
     </div>
   );

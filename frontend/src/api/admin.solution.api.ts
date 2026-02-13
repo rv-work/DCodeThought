@@ -21,3 +21,13 @@ export const saveAdminSolution = async (data: {
 export const deleteAdminSolution = async (problemId: string) => {
   await api.delete(`/api/admin/solutions/${problemId}`);
 };
+
+export const getAdminSolutionByProblemId = async (problemId: string) => {
+  const res = await api.get(`/api/admin/solutions/${problemId}`);
+  return res.data as {
+    success: boolean;
+    solution: Solution & {
+      code?: Record<string, string>;
+    };
+  };
+};

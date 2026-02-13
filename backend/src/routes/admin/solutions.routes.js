@@ -9,6 +9,7 @@ import {
   addOrUpdateSolutionAdmin,
   deleteSolutionAdmin,
   getAvailableProblemsForSolution,
+  getSingleSolutionAdmin,
 } from "../../controllers/admin/solutions.controller.js";
 
 const router = express.Router();
@@ -18,7 +19,9 @@ router.use(protect, adminOnly);
 
 router.get("/available-problems", getAvailableProblemsForSolution);
 router.get("/", getAllSolutionsAdmin);
+router.get("/:problemId", getSingleSolutionAdmin); // 👈 after specific
 router.post("/save", validate(solutionSchema), addOrUpdateSolutionAdmin);
 router.delete("/:problemId", deleteSolutionAdmin);
+
 
 export default router;
