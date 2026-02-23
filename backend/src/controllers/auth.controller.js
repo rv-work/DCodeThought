@@ -94,7 +94,7 @@ export const googleLogin = async (req, res) => {
   }
 };
 
-// ---------------------- LOGOUT ----------------------
+// ---------------------- LOGOUT -----------------------
 export const logout = async (req, res) => {
   res.clearCookie("token", {
   httpOnly: true,
