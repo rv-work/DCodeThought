@@ -1,15 +1,14 @@
 import Potd from "../../models/Potd.js";
 import Problem from "../../models/Problem.js";
+import { cacheDel, cacheDelPrefix } from "../../services/cache.service.js";
 
-/**
- * GET all POTDs (not problems)
- */
+
+// ---------------- GET ALL ----------------
 export const getAllPotdAdmin = async (req, res) => {
   try {
     const potds = await Potd.find()
       .populate("problem")
       .sort({ date: -1 });
-
 
     res.json({ success: true, potds });
   } catch {
@@ -18,16 +17,15 @@ export const getAllPotdAdmin = async (req, res) => {
 };
 
 
-
+// ---------------- GET SINGLE ----------------
 export const getSinglePotdAdmin = async (req, res) => {
   try {
-
-    const potd = await Potd.findById(req.params.potdId).populate("problem");
+    const potd = await Potd.findById(req.params.potdId)
+      .populate("problem");
 
     if (!potd) {
       return res.status(404).json({ message: "POTD not found" });
     }
-
 
     res.json({ success: true, potd });
   } catch {
@@ -35,6 +33,8 @@ export const getSinglePotdAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- UPDATE ----------------
 export const updatePotdAdmin = async (req, res) => {
   try {
     const { problemId, potdDate } = req.body;
@@ -48,6 +48,11 @@ export const updatePotdAdmin = async (req, res) => {
       { new: true }
     ).populate("problem");
 
+    // 🔥 Clear public caches
+    await cacheDel("potd:today");
+    await cacheDelPrefix("potd:history:");
+    await cacheDel("home:stats");
+
     res.json({ success: true, potd: updated });
   } catch {
     res.status(500).json({ message: "Update POTD failed" });
@@ -55,15 +60,12 @@ export const updatePotdAdmin = async (req, res) => {
 };
 
 
-/**
- * ADD POTD
- */
+// ---------------- ADD ----------------
 export const addPotdAdmin = async (req, res) => {
   try {
-
     const { problemId, potdDate } = req.body;
 
-    // ensure date uniqueness
+    // Ensure date uniqueness
     await Potd.findOneAndDelete({ date: potdDate });
 
     const potd = await Potd.create({
@@ -71,18 +73,28 @@ export const addPotdAdmin = async (req, res) => {
       date: potdDate,
     });
 
+    // 🔥 Clear public caches
+    await cacheDel("potd:today");
+    await cacheDelPrefix("potd:history:");
+    await cacheDel("home:stats");
+
     res.json({ success: true, potd });
   } catch {
     res.status(500).json({ message: "Add POTD failed" });
   }
 };
 
-/**
- * REMOVE POTD
- */
+
+// ---------------- REMOVE ----------------
 export const removePotdAdmin = async (req, res) => {
   try {
     await Potd.findByIdAndDelete(req.params.potdId);
+
+    // 🔥 Clear public caches
+    await cacheDel("potd:today");
+    await cacheDelPrefix("potd:history:");
+    await cacheDel("home:stats");
+
     res.json({ success: true });
   } catch {
     res.status(500).json({ message: "Remove POTD failed" });
@@ -91,9 +103,7 @@ export const removePotdAdmin = async (req, res) => {
 
 
 
-
-
-// GET /api/admin/potd/available-problems
+// ---------------- AVAILABLE PROBLEMS ----------------
 export const getAvailableProblemsForPotd = async (req, res) => {
   try {
     const potds = await Potd.find().select("problem");
@@ -101,13 +111,11 @@ export const getAvailableProblemsForPotd = async (req, res) => {
 
     const problems = await Problem.find({
       _id: { $nin: usedProblemIds },
-      type: "potd", // ✅ Only POTD type problems
+      type: "potd",
     }).sort({ problemNumber: 1 });
 
     res.json({ success: true, problems });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Failed to load available problems" });
   }
 };
-
-

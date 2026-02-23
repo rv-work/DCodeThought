@@ -1,21 +1,41 @@
 import Request from "../../models/Request.js";
+import { cacheDel } from "../../services/cache.service.js";
 
+
+// ---------------- GET ALL ----------------
 export const getAllRequestsAdmin = async (req, res) => {
-  const requests = await Request.find()
-    .populate("createdBy", "name email")
-    .sort({ votes: -1 });
+  try {
+    const requests = await Request.find()
+      .populate("createdBy", "name email")
+      .sort({ votes: -1 });
 
-  res.json({ success: true, requests });
+    res.json({ success: true, requests });
+  } catch {
+    res.status(500).json({ message: "Failed to load requests" });
+  }
 };
 
+
+// ---------------- MARK COMPLETED ----------------
 export const markRequestCompleted = async (req, res) => {
-  const { completed } = req.body;
+  try {
+    const { completed } = req.body;
 
-  const request = await Request.findByIdAndUpdate(
-    req.params.id,
-    { completed },
-    { new: true }
-  );
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      { completed },
+      { new: true }
+    );
 
-  res.json({ success: true, request });
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // 🔥 Clear affected public cache
+    await cacheDel("home:stats");
+
+    res.json({ success: true, request });
+  } catch {
+    res.status(500).json({ message: "Update failed" });
+  }
 };

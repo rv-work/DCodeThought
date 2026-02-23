@@ -1,7 +1,10 @@
 // controllers/admin/solutions.controller.js
 import Solution from "../../models/Solution.js";
 import Problem from "../../models/Problem.js";
+import { cacheDel } from "../../services/cache.service.js";
 
+
+// ---------------- AVAILABLE PROBLEMS ----------------
 export const getAvailableProblemsForSolution = async (req, res) => {
   try {
     const solutions = await Solution.find().select("problemId");
@@ -17,14 +20,15 @@ export const getAvailableProblemsForSolution = async (req, res) => {
   }
 };
 
+
+// ---------------- GET ALL ----------------
 export const getAllSolutionsAdmin = async (req, res) => {
   try {
     const solutions = await Solution.find()
-      .populate("problemId", "problemNumber title")
+      .populate("problemId", "problemNumber title slug")
       .sort({ createdAt: -1 })
       .lean();
 
-    // 🔁 DB → frontend normalize
     const normalized = solutions.map((s) => ({
       ...s,
       code: Object.fromEntries(
@@ -38,6 +42,8 @@ export const getAllSolutionsAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- ADD OR UPDATE ----------------
 export const addOrUpdateSolutionAdmin = async (req, res) => {
   try {
     const { problemId, code, ...rest } = req.body;
@@ -46,7 +52,6 @@ export const addOrUpdateSolutionAdmin = async (req, res) => {
     if (!problem)
       return res.status(404).json({ message: "Problem not found" });
 
-    // 🔥 FRONTEND → DB TRANSFORM
     const codeBlocks = code
       ? Object.entries(code).map(([language, value]) => ({
           language,
@@ -64,6 +69,9 @@ export const addOrUpdateSolutionAdmin = async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // 🔥 Clear public cache
+    await cacheDel(`solution:slug:${problem.slug}`);
+
     res.json({ success: true, solution });
   } catch (err) {
     console.error(err);
@@ -71,9 +79,22 @@ export const addOrUpdateSolutionAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- DELETE ----------------
 export const deleteSolutionAdmin = async (req, res) => {
   try {
-    await Solution.findOneAndDelete({ problemId: req.params.problemId });
+    const problem = await Problem.findById(req.params.problemId);
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    await Solution.findOneAndDelete({
+      problemId: req.params.problemId,
+    });
+
+    // 🔥 Clear public cache
+    await cacheDel(`solution:slug:${problem.slug}`);
+
     res.json({ success: true });
   } catch {
     res.status(500).json({ message: "Delete failed" });
@@ -81,9 +102,7 @@ export const deleteSolutionAdmin = async (req, res) => {
 };
 
 
-
-
-
+// ---------------- GET SINGLE ----------------
 export const getSingleSolutionAdmin = async (req, res) => {
   try {
     const solution = await Solution.findOne({
@@ -98,7 +117,6 @@ export const getSingleSolutionAdmin = async (req, res) => {
       });
     }
 
-    // normalize DB → frontend
     const normalized = {
       ...solution,
       code: Object.fromEntries(

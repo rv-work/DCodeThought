@@ -1,12 +1,9 @@
 import Contest from "../../models/Contest.js";
 import Problem from "../../models/Problem.js";
+import { cacheDel, cacheDelPrefix } from "../../services/cache.service.js";
 
 
-/**
- * GET problems eligible for contest
- * - type = contest
- * - not used in any contest yet
- */
+// ---------------- GET ELIGIBLE PROBLEMS ----------------
 export const getContestProblems = async (req, res) => {
   try {
     const mode = req.query.mode;
@@ -20,17 +17,10 @@ export const getContestProblems = async (req, res) => {
     let filter = { type: "contest" };
 
     if (mode === "add") {
-      // Exclude already used problems
       const contests = await Contest.find().select("problems");
-
-      const usedProblemIds = contests.flatMap(
-        (c) => c.problems
-      );
-
+      const usedProblemIds = contests.flatMap((c) => c.problems);
       filter._id = { $nin: usedProblemIds };
     }
-
-    // edit mode → no exclusion
 
     const problems = await Problem.find(filter)
       .select("problemNumber title")
@@ -45,6 +35,7 @@ export const getContestProblems = async (req, res) => {
 };
 
 
+// ---------------- GET ALL CONTESTS ----------------
 export const getAllContestsAdmin = async (req, res) => {
   try {
     const contests = await Contest.find()
@@ -57,18 +48,34 @@ export const getAllContestsAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- ADD CONTEST ----------------
 export const addContestAdmin = async (req, res) => {
   try {
     const contest = await Contest.create(req.body);
+
+    // 🔥 Clear public caches
+    await cacheDelPrefix("contests:list:");
+    await cacheDel("home:stats");
+
     res.json({ success: true, contest });
   } catch {
     res.status(500).json({ message: "Add contest failed" });
   }
 };
 
+
+// ---------------- DELETE CONTEST ----------------
 export const deleteContestAdmin = async (req, res) => {
   try {
-    await Contest.findByIdAndDelete(req.params.id);
+    const contest = await Contest.findByIdAndDelete(req.params.id);
+
+    if (contest) {
+      await cacheDelPrefix("contests:list:");
+      await cacheDel(`contest:${contest.contestNumber}`);
+      await cacheDel("home:stats");
+    }
+
     res.json({ success: true });
   } catch {
     res.status(500).json({ message: "Delete contest failed" });
@@ -76,6 +83,7 @@ export const deleteContestAdmin = async (req, res) => {
 };
 
 
+// ---------------- GET SINGLE ----------------
 export const getSingleContestAdmin = async (req, res) => {
   try {
     const contest = await Contest.findById(req.params.id)
@@ -91,25 +99,32 @@ export const getSingleContestAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- UPDATE ----------------
 export const updateContestAdmin = async (req, res) => {
   try {
-
     const duplicate = await Contest.findOne({
-  _id: { $ne: req.params.id },
-  problems: { $in: req.body.problems },
-});
+      _id: { $ne: req.params.id },
+      problems: { $in: req.body.problems },
+    });
 
-if (duplicate) {
-  return res.status(400).json({
-    message: "Problem already used in another contest",
-  });
-}
+    if (duplicate) {
+      return res.status(400).json({
+        message: "Problem already used in another contest",
+      });
+    }
 
     const updated = await Contest.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     ).populate("problems", "problemNumber title");
+
+    if (updated) {
+      await cacheDelPrefix("contests:list:");
+      await cacheDel(`contest:${updated.contestNumber}`);
+      await cacheDel("home:stats");
+    }
 
     res.json({ success: true, contest: updated });
   } catch {

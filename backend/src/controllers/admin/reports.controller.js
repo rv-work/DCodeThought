@@ -1,5 +1,8 @@
 import Report from "../../models/Report.js";
+import { cacheDel } from "../../services/cache.service.js";
 
+
+// ---------------- GET ALL ----------------
 export const getAllReportsAdmin = async (req, res) => {
   try {
     const reports = await Report.find()
@@ -12,6 +15,8 @@ export const getAllReportsAdmin = async (req, res) => {
   }
 };
 
+
+// ---------------- UPDATE STATUS ----------------
 export const updateReportStatus = async (req, res) => {
   try {
     const { resolved } = req.body;
@@ -21,6 +26,13 @@ export const updateReportStatus = async (req, res) => {
       { resolved },
       { new: true }
     );
+
+    if (!report) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    // 🔥 Clear affected public cache
+    await cacheDel("home:stats");
 
     res.json({ success: true, report });
   } catch {
