@@ -1,14 +1,14 @@
 import api from "./axios";
-import type { PotdProblem } from "@/types/potd";
+import type { AdminPotd } from "@/types/potd";
 
 export const getAdminPotds = async () => {
   const res = await api.get("/api/admin/potd");
-  return res.data as { success: boolean; potds: PotdProblem[] };
+  return res.data as { success: boolean; potds: AdminPotd[] };
 };
 
 export const getAdminPotdById = async (id: string) => {
   const res = await api.get(`/api/admin/potd/${id}`);
-  return res.data as { success: boolean; potd: PotdProblem };
+  return res.data as { success: boolean; potd: AdminPotd };
 };
 
 export const updateAdminPotd = async (

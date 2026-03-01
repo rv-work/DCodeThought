@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getAdminPotds, deleteAdminPotd } from "@/api/admin.potd.api";
-import type { PotdProblem } from "@/types/potd";
+import type { AdminPotd } from "@/types/potd";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import Link from "next/link";
 
 export default function AdminPotdPage() {
-  const [potds, setPotds] = useState<PotdProblem[]>([]);
+  const [potds, setPotds] = useState<AdminPotd[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

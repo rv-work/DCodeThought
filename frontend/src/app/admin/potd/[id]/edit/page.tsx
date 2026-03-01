@@ -5,11 +5,11 @@ import { useParams } from "next/navigation";
 import { getAdminPotdById } from "@/api/admin.potd.api";
 import PotdForm from "@/components/admin/PotdForm";
 import AdminLoading from "@/components/admin/AdminLoading";
-import type { PotdProblem } from "@/types/potd";
+import type { AdminPotd } from "@/types/potd";
 
 export default function EditPotdPage() {
   const { id: potdId } = useParams();
-  const [potd, setPotd] = useState<PotdProblem | null>(null);
+  const [potd, setPotd] = useState<AdminPotd | null>(null);
 
   useEffect(() => {
     if (potdId) {

@@ -7,10 +7,10 @@ import {
   addAdminPotd,
   updateAdminPotd,
 } from "@/api/admin.potd.api";
-import type { PotdProblem } from "@/types/potd";
+import type { AdminPotd } from "@/types/potd";
 
 type Props = {
-  initialData?: PotdProblem;
+  initialData?: AdminPotd;
   isEdit?: boolean;
 };
 
