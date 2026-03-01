@@ -12,6 +12,7 @@ export const addRequest = async (payload: {
   type: RequestType;
   title: string;
   description: string;
+  leetcodeLink?: string | null;
 }) => {
   const res = await api.post("/api/requests", payload);
   return res.data;
@@ -19,5 +20,5 @@ export const addRequest = async (payload: {
 
 export const toggleRequestVote = async (id: string) => {
   const res = await api.post(`/api/requests/vote/${id}`);
-  return res.data as { success: boolean; votes: number };
+  return res.data as { success: boolean; votes: { userId: string }[] };
 };

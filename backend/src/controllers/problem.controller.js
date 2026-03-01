@@ -1,5 +1,46 @@
 import Problem from "../models/Problem.js";
+import User from "../models/User.js";
 import { cacheGet, cacheSet } from "../services/cache.service.js";
+
+
+
+export const addRecentView = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // find the problem from slug
+    const problem = await Problem.findOne({ slug }).select("_id");
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    // remove if same problem exists in recent
+    await User.updateOne(
+      { _id: req.user._id },
+      { $pull: { recentlyViewed: { problemId: problem._id } } }
+    );
+
+    // insert at top + keep only last 20 entries
+    await User.updateOne(
+      { _id: req.user._id },
+      {
+        $push: {
+          recentlyViewed: {
+            $each: [{ problemId: problem._id, viewedAt: new Date() }],
+            $position: 0, // insert at top
+            $slice: 20,   // keep max last 20
+          },
+        },
+      }
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Recent View Error:", err);
+    res.status(500).json({ message: "Could not record view" });
+  }
+};
 
 export const getPublicProblems = async (req, res) => {
   try {

@@ -10,13 +10,24 @@ export default function RequestForm() {
   const [description, setDescription] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [leetcodeLink, setLeetcodeLink] = useState("");
 
   const submit = async () => {
     if (!title.trim() || !description.trim()) return;
 
+    if (type === "question" && !leetcodeLink.trim()) {
+      alert("LeetCode link is required for question requests.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await addRequest({ type, title, description });
+      await addRequest({
+        type,
+        title,
+        description,
+        leetcodeLink: type === "question" ? leetcodeLink : undefined,
+      });
       setTitle("");
       setDescription("");
       setSubmitted(true);
@@ -83,6 +94,20 @@ export default function RequestForm() {
           rows={4}
         />
       </div>
+
+      {type === "question" && (
+        <div>
+          <label className="block text-sm font-semibold mb-2">
+            LeetCode Link <span className="text-red-500">*</span>
+          </label>
+          <input
+            value={leetcodeLink}
+            onChange={(e) => setLeetcodeLink(e.target.value)}
+            placeholder="https://leetcode.com/problems/..."
+            className="w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-text"
+          />
+        </div>
+      )}
 
       {/* Submit Button */}
       <div className="flex justify-end">

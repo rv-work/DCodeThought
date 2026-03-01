@@ -15,6 +15,7 @@ const RequestSchema = new mongoose.Schema({
   },
   title: { type: String, required: true },
   description: { type: String, required: true },
+  leetcodeLink: { type: String, default: null },
   votes: [VoteSchema],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

@@ -17,9 +17,10 @@ export type RequestType = "question" | "feature";
 
 export type PublicRequest = {
   _id: string;
-  type: RequestType;
+  type: "question" | "feature";
   title: string;
   description: string;
+  leetcodeLink?: string | null;
   votes: { userId: string }[];
   completed: boolean;
   createdAt: string;

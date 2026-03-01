@@ -13,6 +13,7 @@ import CommentList from "@/components/comments/CommentList";
 import ReportProblem from "@/components/report/ReportProblem";
 import { ArrowLeft, Flag, X } from "lucide-react";
 import Link from "next/link";
+import api from "@/api/axios";
 
 export default function ProblemDetailPage() {
   const params = useParams();
@@ -29,6 +30,16 @@ export default function ProblemDetailPage() {
       getSolutionBySlug(slug).then((res) => setSolution(res.solution)),
     ]).finally(() => setLoading(false));
   }, [slug]);
+
+
+  useEffect(() => {
+    if (!slug) return;
+
+    api.post(`/api/problems/${slug}/view`)
+      .catch(() => { });
+  }, [slug]);
+
+
 
   if (loading) {
     return (
@@ -96,7 +107,7 @@ export default function ProblemDetailPage() {
             {!showReport ? (
               <button
                 onClick={() => setShowReport(true)}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-linear-to-r from-red-500 to-orange-500 text-white font-medium hover:shadow-lg transition-all"
+                className="inline-flex cursor-pointer items-center gap-2 px-5 py-2 rounded-xl bg-linear-to-r from-red-500 to-orange-500 text-white font-medium hover:shadow-lg transition-all"
               >
                 <Flag className="w-4 h-4" />
                 Report this problem

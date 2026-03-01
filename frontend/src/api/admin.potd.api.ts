@@ -8,7 +8,6 @@ export const getAdminPotds = async () => {
 
 export const getAdminPotdById = async (id: string) => {
   const res = await api.get(`/api/admin/potd/${id}`);
-  console.log("res : ", res.data);
   return res.data as { success: boolean; potd: PotdProblem };
 };
 

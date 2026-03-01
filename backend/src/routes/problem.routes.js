@@ -1,10 +1,15 @@
 import express from "express";
 import { rateLimit } from "../middleware/rateLimit.js";
 import {
-  getPublicProblems,getProblemDetail
+  getPublicProblems,getProblemDetail,
+  addRecentView
 } from "../controllers/problem.controller.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
+
+
+
 
 router.get(
   "/",
@@ -17,5 +22,9 @@ router.get(
   rateLimit({ keyPrefix: "problem-detail", limit: 60, windowSec: 60 }),
   getProblemDetail
 );
+
+
+router.post("/:slug/view", protect, addRecentView);
+
 
 export default router;

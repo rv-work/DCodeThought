@@ -23,6 +23,7 @@ export const addRequest = async (req, res) => {
 
 export const toggleVote = async (req, res) => {
   const request = await Request.findById(req.params.id);
+
   if (!request) {
     return res.status(404).json({ message: "Request not found" });
   }
@@ -41,5 +42,9 @@ export const toggleVote = async (req, res) => {
   }
 
   await request.save();
-  res.json({ success: true, votes: request.votes.length });
+
+  res.json({
+    success: true,
+    votes: request.votes, // IMPORTANT: return full array
+  });
 };
