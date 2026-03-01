@@ -12,7 +12,9 @@ export const getPublicProblems = async (req, res) => {
       sort = "newest",
     } = req.query;
 
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
 
     const query = {};
 
@@ -27,21 +29,29 @@ export const getPublicProblems = async (req, res) => {
     if (difficulty) query.difficulty = difficulty;
     if (type) query.type = type;
 
-    const sortQuery = sort === "oldest" ? { addedAt: 1 } : { addedAt: -1 };
+    const sortQuery =
+      sort === "oldest" ? { addedAt: 1 } : { addedAt: -1 };
 
-    const cacheKey = `problems:${page}:${limit}:${search}:${difficulty}:${type}:${sort}`;
+    const cacheKey = `problems:${pageNum}:${limitNum}:${search || ""}:${difficulty || ""}:${type || ""}:${sort}`;
+
     const cached = await cacheGet(cacheKey);
 
     if (cached) {
-      return res.json({ fromCache: true, ...cached });
+      console.log("⚡ getPublicProblems → Redis HIT");
+      res.set("X-Cache", "HIT");
+      return res.json(cached);
     }
+
+    console.log("🗄️ getPublicProblems → MongoDB MISS");
+    res.set("X-Cache", "MISS");
 
     const [problems, total] = await Promise.all([
       Problem.find(query)
         .sort(sortQuery)
         .skip(skip)
-        .limit(Number(limit))
-        .select("problemNumber title difficulty slug type tags addedAt"),
+        .limit(limitNum)
+        .select("problemNumber title difficulty slug type tags addedAt")
+        .lean(),
       Problem.countDocuments(query),
     ]);
 
@@ -49,8 +59,8 @@ export const getPublicProblems = async (req, res) => {
       success: true,
       problems,
       total,
-      page: Number(page),
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
 
     await cacheSet(cacheKey, payload, 3600);
@@ -63,8 +73,6 @@ export const getPublicProblems = async (req, res) => {
 
 
 
-
-
 export const getProblemDetail = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -73,8 +81,13 @@ export const getProblemDetail = async (req, res) => {
     const cached = await cacheGet(cacheKey);
 
     if (cached) {
-      return res.json({ fromCache: true, problem: cached });
+      console.log("⚡ getProblemDetail → Redis HIT");
+      res.set("X-Cache", "HIT");
+      return res.json({ success: true, problem: cached });
     }
+
+    console.log("🗄️ getProblemDetail → MongoDB MISS");
+    res.set("X-Cache", "MISS");
 
     const problem = await Problem.findOne({ slug }).lean();
 

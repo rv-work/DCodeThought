@@ -10,8 +10,13 @@ export const getHomeStats = async (req, res) => {
     const cached = await cacheGet(cacheKey);
 
     if (cached) {
-      return res.json({ fromCache: true, stats: cached });
+      console.log("⚡ getHomeStats → Redis HIT");
+      res.set("X-Cache", "HIT");
+      return res.json({ success: true, stats: cached });
     }
+
+    console.log("🗄️ getHomeStats → MongoDB MISS");
+    res.set("X-Cache", "MISS");
 
     const [
       totalProblems,
@@ -38,7 +43,7 @@ export const getHomeStats = async (req, res) => {
     await cacheSet(cacheKey, stats, 3600); // 1 hour
 
     res.json({ success: true, stats });
-  } catch {
+  } catch (err) {
     res.status(500).json({ message: "Failed to load home stats" });
   }
 };

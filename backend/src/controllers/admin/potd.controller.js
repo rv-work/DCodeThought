@@ -51,6 +51,7 @@ export const updatePotdAdmin = async (req, res) => {
       { new: true }
     ).populate("problem");
 
+    // 🔥 Clear public caches
     await cacheDel("potd:today");
     await cacheDelPrefix("potd:history:");
     await cacheDel("home:stats");
@@ -71,12 +72,14 @@ export const addPotdAdmin = async (req, res) => {
     date.setHours(0, 0, 0, 0);
 
     await Potd.findOneAndDelete({ date });
+    await Potd.findOneAndDelete({ date: potdDate }); // ensure uniqueness
 
     const potd = await Potd.create({
       problem: problemId,
       date,
     });
 
+    // 🔥 Clear public caches
     await cacheDel("potd:today");
     await cacheDelPrefix("potd:history:");
     await cacheDel("home:stats");
@@ -103,7 +106,6 @@ export const removePotdAdmin = async (req, res) => {
     res.status(500).json({ message: "Remove POTD failed" });
   }
 };
-
 
 
 // ---------------- AVAILABLE PROBLEMS ----------------
