@@ -16,7 +16,16 @@ export const cacheGet = async (key) => {
     const data = await redis.get(key);
     if (!data) return null;
 
-    return JSON.parse(data);
+    // If already object (Upstash auto JSON)
+    if (typeof data === "object") {
+      return data;
+    }
+
+    if (typeof data === "string") {
+      return JSON.parse(data);
+    }
+
+    return null;
   } catch (err) {
     console.error(`❌ Redis GET Error on key "${key}":`, err.message);
     return null;

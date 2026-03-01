@@ -25,7 +25,6 @@ export const getSolutionByProblemSlug = async (req, res) => {
     }
 
 
-    console.log("sol : " , solution)
 
     await cacheSet(cacheKey, solution, 3600);
 

@@ -39,16 +39,18 @@ export const updatePotdAdmin = async (req, res) => {
   try {
     const { problemId, potdDate } = req.body;
 
+    const date = new Date(potdDate);
+    date.setHours(0, 0, 0, 0);
+
     const updated = await Potd.findByIdAndUpdate(
       req.params.potdId,
       {
         problem: problemId,
-        date: potdDate,
+        date,
       },
       { new: true }
     ).populate("problem");
 
-    // 🔥 Clear public caches
     await cacheDel("potd:today");
     await cacheDelPrefix("potd:history:");
     await cacheDel("home:stats");
@@ -65,15 +67,16 @@ export const addPotdAdmin = async (req, res) => {
   try {
     const { problemId, potdDate } = req.body;
 
-    // Ensure date uniqueness
-    await Potd.findOneAndDelete({ date: potdDate });
+    const date = new Date(potdDate);
+    date.setHours(0, 0, 0, 0);
+
+    await Potd.findOneAndDelete({ date });
 
     const potd = await Potd.create({
       problem: problemId,
-      date: potdDate,
+      date,
     });
 
-    // 🔥 Clear public caches
     await cacheDel("potd:today");
     await cacheDelPrefix("potd:history:");
     await cacheDel("home:stats");

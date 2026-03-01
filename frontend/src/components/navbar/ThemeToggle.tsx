@@ -14,8 +14,8 @@ export default function ThemeToggle() {
       {/* Sun icon */}
       <svg
         className={`absolute w-5 h-5 transition-all duration-500 ${theme === "dark"
-            ? "rotate-90 scale-0 opacity-0"
-            : "rotate-0 scale-100 opacity-100"
+          ? "rotate-90 scale-0 opacity-0"
+          : "rotate-0 scale-100 opacity-100"
           }`}
         fill="none"
         stroke="currentColor"
@@ -32,8 +32,8 @@ export default function ThemeToggle() {
       {/* Moon icon */}
       <svg
         className={`absolute w-5 h-5 transition-all duration-500 ${theme === "dark"
-            ? "rotate-0 scale-100 opacity-100"
-            : "-rotate-90 scale-0 opacity-0"
+          ? "rotate-0 scale-100 opacity-100"
+          : "-rotate-90 scale-0 opacity-0"
           }`}
         fill="none"
         stroke="currentColor"
@@ -48,7 +48,7 @@ export default function ThemeToggle() {
       </svg>
 
       {/* Hover glow */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-accent/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur"></div>
+      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-accent/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur"></div>
     </button>
   );
 }

@@ -1,7 +1,6 @@
-import Problem from "../models/Problem.js";
+import Potd from "../models/Potd.js";
 import { cacheGet, cacheSet } from "../services/cache.service.js";
 
-// ---------------- TODAY ----------------
 export const getTodayPotd = async (req, res) => {
   try {
     const cacheKey = "potd:today";
@@ -11,66 +10,80 @@ export const getTodayPotd = async (req, res) => {
       return res.json({ fromCache: true, potd: cached });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // ✅ Timezone-safe range
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
 
-    const potd = await Problem.findOne({
-      type: "potd",
-      potdDate: today,
-    }).select("problemNumber title slug difficulty tags potdDate");
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
 
-    await cacheSet(cacheKey, potd, 86400); // 24h
+    const potdDoc = await Potd.findOne({
+      date: { $gte: start, $lte: end },
+    })
+      .populate(
+        "problem",
+        "problemNumber title slug difficulty tags"
+      )
+      .lean();
 
-    res.json({ success: true, potd });
+    if (!potdDoc) {
+      return res.json({ success: true, potd: null });
+    }
+
+    const payload = {
+      ...potdDoc.problem,
+      potdDate: potdDoc.date,
+    };
+
+    await cacheSet(cacheKey, payload, 86400);
+
+    res.json({ success: true, potd: payload });
   } catch {
     res.status(500).json({ message: "Failed to load POTD" });
   }
 };
 
-// ---------------- HISTORY ----------------
 export const getPotdHistory = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      search = "",
-    } = req.query;
+    const { page = 1, limit = 10 } = req.query;
 
-    const skip = (page - 1) * limit;
-    const regex = new RegExp(search, "i");
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const query = {
-      type: "potd",
-      $or: [
-        { title: regex },
-        { problemNumber: Number(search) || -1 },
-      ],
-    };
-
-    const cacheKey = `potd:history:${page}:${limit}:${search}`;
+    const cacheKey = `potd:history:${pageNum}:${limitNum}`;
     const cached = await cacheGet(cacheKey);
 
     if (cached) {
       return res.json({ fromCache: true, ...cached });
     }
 
-    const [potds, total] = await Promise.all([
-      Problem.find(query)
-        .sort({ potdDate: -1 })
+    const [docs, total] = await Promise.all([
+      Potd.find()
+        .sort({ date: -1 })
         .skip(skip)
-        .limit(Number(limit))
-        .select("problemNumber title slug difficulty tags potdDate"),
-      Problem.countDocuments(query),
+        .limit(limitNum)
+        .populate(
+          "problem",
+          "problemNumber title slug difficulty tags"
+        )
+        .lean(),
+      Potd.countDocuments(),
     ]);
+
+    const potds = docs.map((doc) => ({
+      ...doc.problem,
+      potdDate: doc.date,
+    }));
 
     const payload = {
       success: true,
       potds,
-      page: Number(page),
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
 
-    await cacheSet(cacheKey, payload, 3600); // 1h
+    await cacheSet(cacheKey, payload, 3600);
 
     res.json(payload);
   } catch {

@@ -11,7 +11,7 @@ import SolutionSection from "@/components/problem/SolutionSection";
 import type { Solution } from "@/types/solution";
 import CommentList from "@/components/comments/CommentList";
 import ReportProblem from "@/components/report/ReportProblem";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Flag, X } from "lucide-react";
 import Link from "next/link";
 
 export default function ProblemDetailPage() {
@@ -21,6 +21,7 @@ export default function ProblemDetailPage() {
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -55,7 +56,7 @@ export default function ProblemDetailPage() {
             </p>
             <Link
               href="/problems"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold hover:shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-semibold hover:shadow-lg transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Problems
@@ -75,32 +76,44 @@ export default function ProblemDetailPage() {
           {/* Back Button */}
           <Link
             href="/problems"
-            className="inline-flex items-center gap-2 text-muted hover:text-foreground transition-colors group cursor-pointer"
+            className="inline-flex items-center gap-2 text-muted hover:text-foreground transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Problems
           </Link>
 
           {/* Problem Header */}
-          <div className="animate-fade-in-up">
-            <ProblemHeader problem={problem} />
-          </div>
+          <ProblemHeader problem={problem} />
 
           {/* Solution Section */}
-          {solution && (
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-              <SolutionSection solution={solution} />
-            </div>
-          )}
+          {solution && <SolutionSection solution={solution} />}
 
-          {/* Comments Section */}
-          <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-            <CommentList slug={slug} />
-          </div>
+          {/* Comments */}
+          <CommentList slug={slug} />
 
-          {/* Report Section */}
-          <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-            <ReportProblem slug={slug} />
+          {/* Report Toggle Button */}
+          <div className="pt-4">
+            {!showReport ? (
+              <button
+                onClick={() => setShowReport(true)}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-linear-to-r from-red-500 to-orange-500 text-white font-medium hover:shadow-lg transition-all"
+              >
+                <Flag className="w-4 h-4" />
+                Report this problem
+              </button>
+            ) : (
+              <div className="relative rounded-2xl border border-border-subtle bg-background-secondary p-6 animate-fade-in">
+                {/* Close button */}
+                <button
+                  onClick={() => setShowReport(false)}
+                  className="absolute top-4 right-4 text-muted hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <ReportProblem slug={slug} />
+              </div>
+            )}
           </div>
         </div>
       </div>

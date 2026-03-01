@@ -88,7 +88,7 @@ export default function AdminRequestsPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
-                        {r.votes} votes
+                        {Array.isArray(r.votes) ? r.votes.length : r.votes} votes
                       </div>
                       <div className="px-2 py-1 rounded-md bg-background-tertiary border border-border">
                         <span className="text-muted">by </span>
