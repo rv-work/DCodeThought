@@ -18,16 +18,7 @@ export default function Hero() {
 
       <div className="max-w-7xl mx-auto px-6 py-20 w-full">
         <div className="text-center space-y-8 max-w-5xl mx-auto">
-          {/* Badge */}
-          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s' }}>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background-secondary border border-border-subtle text-sm font-medium shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-              </span>
-              Built by a LeetCode Knight
-            </span>
-          </div>
+
 
           {/* Main heading */}
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.1] tracking-tight animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s' }}>

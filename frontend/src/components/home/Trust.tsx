@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Trophy,
   Coffee,
   CalendarCheck,
   Users
@@ -9,7 +8,6 @@ import {
 
 export default function Trust() {
   const badges = [
-    { icon: Trophy, text: "LeetCode Knight" },
     { icon: Coffee, text: "Java-first" },
     { icon: CalendarCheck, text: "Daily consistency" },
     { icon: Users, text: "Community-driven" }

@@ -5,6 +5,7 @@ import NavLinks from "./NavLinks";
 import ThemeToggle from "./ThemeToggle";
 import ProfileMenu from "./ProfileMenu";
 import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -19,26 +20,14 @@ export default function Navbar() {
               href="/"
               className="group flex items-center gap-2 text-xl font-bold tracking-tight"
             >
-              <div className="relative group flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-background-secondary border border-border-subtle shadow-sm flex items-center justify-center">
-                  <svg
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    className="w-6 h-6 text-accent group-hover:scale-110 transition-transform duration-300"
-                    stroke="currentColor"
-                    fill="none"
-                  >
-                    <path d="M4 19.5V6a2 2 0 012-2h10a2 2 0 012 2v13.5" />
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-                    <path d="M8 10h4" />
-                    <path d="M8 14h6" />
-                  </svg>
-                </div>
-
-                <span className="hidden sm:inline text-lg font-bold tracking-tight">
-                  <span className="gradient-text">Code</span>Thought
-                </span>
-              </div>
+              <Image
+                src="/lg.png"
+                alt="DCodeThought Logo"
+                width={251}
+                height={50}
+                priority
+                className="rounded-md object-contain group-hover:scale-110 transition-transform duration-300"
+              />
 
 
             </Link>
@@ -46,7 +35,6 @@ export default function Navbar() {
             <NavLinks />
           </div>
 
-          {/* Right - Actions */}
           <div className="flex items-center gap-4">
             <ThemeToggle />
 
