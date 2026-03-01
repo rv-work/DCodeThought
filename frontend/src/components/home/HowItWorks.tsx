@@ -42,7 +42,7 @@ export default function HowItWorks() {
 
         <div className="relative max-w-3xl mx-auto">
           {/* Connection line */}
-          <div className="hidden md:block absolute left-12 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent via-purple-500 to-accent"></div>
+          <div className="hidden md:block absolute left-12 top-8 bottom-8 w-0.5 bg-linear-to-b from-accent via-purple-500 to-accent"></div>
 
           {/* Steps */}
           <ol className="space-y-6">
@@ -54,15 +54,15 @@ export default function HowItWorks() {
               >
                 <div className="flex items-center gap-6 group">
                   {/* Number circle */}
-                  <div className="relative flex-shrink-0 z-10">
-                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent to-purple-500 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+                  <div className="relative shrink-0 z-10">
+                    <div className="w-24 h-24 rounded-2xl bg-linear-to-br from-accent to-purple-500 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
                       <div className="text-center">
                         <div className="text-3xl mb-1">{step.icon}</div>
                         <div className="text-xs font-bold opacity-80">Step {index + 1}</div>
                       </div>
                     </div>
                     {/* Glow effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent to-purple-500 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-accent to-purple-500 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
                   </div>
 
                   {/* Content */}
@@ -80,7 +80,7 @@ export default function HowItWorks() {
 
         {/* Bottom highlight */}
         <div className="mt-16 animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
-          <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-accent/10 to-purple-500/10 border border-accent/20">
+          <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-linear-to-r from-accent/10 to-purple-500/10 border border-accent/20">
             <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>

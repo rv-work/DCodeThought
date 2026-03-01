@@ -81,15 +81,15 @@ export default function Stats() {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Gradient overlay on hover */}
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+              <div className={`absolute inset-0 rounded-2xl bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
 
               {/* Icon */}
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} text-white mb-4 shadow-lg`}>
+              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br ${stat.gradient} text-white mb-4 shadow-lg`}>
                 {stat.icon}
               </div>
 
               {/* Number */}
-              <div className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-br bg-clip-text text-transparent" style={{
+              <div className="text-4xl md:text-5xl font-bold mb-2 bg-linear-to-br bg-clip-text text-transparent" style={{
                 backgroundImage: `linear-gradient(to bottom right, var(--foreground), var(--foreground-muted))`
               }}>
                 {stat.value}+

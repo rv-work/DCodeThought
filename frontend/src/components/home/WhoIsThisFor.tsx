@@ -38,7 +38,7 @@ export default function WhoIsThisFor() {
   return (
     <section className="py-24 bg-background-tertiary dark:bg-background-secondary relative overflow-hidden">
       {/* Decorative background */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-linear-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
 
       <div className="max-w-7xl mx-auto px-6 relative">
         <div className="text-center mb-16">
@@ -60,10 +60,10 @@ export default function WhoIsThisFor() {
               {/* Card */}
               <div className="relative h-full rounded-2xl bg-background-secondary border border-border-subtle p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
                 {/* Gradient overlay */}
-                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                <div className={`absolute inset-0 rounded-2xl bg-linear-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
 
                 {/* Icon */}
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${item.gradient} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300 relative`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br ${item.gradient} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300 relative`}>
                   {item.icon}
                 </div>
 
@@ -78,7 +78,7 @@ export default function WhoIsThisFor() {
                 </p>
 
                 {/* Stats badge */}
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${item.gradient} bg-opacity-10 border border-current text-sm font-medium relative`} style={{
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r ${item.gradient} bg-opacity-10 border border-current text-sm font-medium relative`} style={{
                   borderColor: 'transparent',
                   backgroundImage: `linear-gradient(white, white), linear-gradient(to right, var(--tw-gradient-stops))`,
                   backgroundOrigin: 'border-box',

@@ -96,8 +96,8 @@ export default function ProblemWalkthrough() {
                           {/* Icon */}
                           <div
                             className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-linear-to-br from-accent to-purple-500 text-white shadow-lg mb-4 ${isEven
-                                ? "lg:float-right lg:ml-4"
-                                : "lg:float-left lg:mr-4"
+                              ? "lg:float-right lg:ml-4"
+                              : "lg:float-left lg:mr-4"
                               }`}
                           >
                             <Icon className="w-7 h-7" strokeWidth={2.5} />
