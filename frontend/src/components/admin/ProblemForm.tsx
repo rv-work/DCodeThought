@@ -16,10 +16,9 @@ type Props = {
 export default function ProblemForm({ initialData, isEdit }: Props) {
   const router = useRouter();
 
-  // Fix 1: problemNumber ko number | string allow kiya taaki empty string "" set ho sake
-  const [form, setForm] = useState<Omit<ProblemDetail, "problemNumber"> & { problemNumber: number | string }>(() => ({
+  const [form, setForm] = useState<ProblemDetail>(() => ({
     _id: initialData?._id ?? "",
-    problemNumber: initialData?.problemNumber ?? "", // 0 ki jagah "" use kiya as default
+    problemNumber: initialData?.problemNumber ?? 0,
     title: initialData?.title ?? "",
     difficulty: initialData?.difficulty ?? "Easy",
     type: initialData?.type ?? "potd",
@@ -27,31 +26,13 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
     leetcodeLink: initialData?.leetcodeLink ?? "",
   }));
 
-  // Fix 2: Tags ke liye ek separate local state banayi
-  const [tagsInput, setTagsInput] = useState<string>(
-    initialData?.tags?.join(", ") ?? ""
-  );
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Submit karte time tags ki string ko wapas array mein convert karenge
-    const processedTags = tagsInput
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
-    // Payload prepare karte time problemNumber ko explicitly Number mein cast karenge
-    const payload = {
-      ...form,
-      problemNumber: Number(form.problemNumber),
-      tags: processedTags,
-    } as ProblemDetail;
-
     if (isEdit && form._id) {
-      await updateAdminProblem(form._id, payload);
+      await updateAdminProblem(form._id, form);
     } else {
-      await addAdminProblem(payload);
+      await addAdminProblem(form);
     }
 
     router.push("/admin/problems");
@@ -80,11 +61,7 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
               type="number"
               value={form.problemNumber}
               onChange={(e) =>
-                setForm({
-                  ...form,
-                  // Agar user sab kuch delete kar de, toh "" set karo, warna number
-                  problemNumber: e.target.value === "" ? "" : Number(e.target.value),
-                })
+                setForm({ ...form, problemNumber: Number(e.target.value) })
               }
               className="input-field"
               placeholder="e.g., 1"
@@ -99,7 +76,9 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             </label>
             <input
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, title: e.target.value })
+              }
               className="input-field"
               placeholder="e.g., Two Sum"
               required
@@ -113,7 +92,9 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             </label>
             <input
               value={form.leetcodeLink}
-              onChange={(e) => setForm({ ...form, leetcodeLink: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, leetcodeLink: e.target.value })
+              }
               className="input-field"
               placeholder="https://leetcode.com/problems/two-sum/"
               required
@@ -167,19 +148,32 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
 
           {/* Tags */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold">Tags</label>
+            <label className="block text-sm font-semibold">
+              Tags
+            </label>
             <input
               placeholder="Array, Hash Table, Two Pointers (comma separated)"
               className="input-field"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)} // Ab ye type karte time smoothly kaam karega
+              value={form.tags.join(", ")}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  tags: e.target.value
+                    .split(",")
+                    .map((tag) => tag.trim())
+                    .filter(Boolean),
+                })
+              }
             />
             <p className="text-xs text-muted">Separate multiple tags with commas</p>
           </div>
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">
-            <button type="submit" className="flex-1 primary-btn cursor-pointer">
+            <button
+              type="submit"
+              className="flex-1 primary-btn cursor-pointer"
+            >
               {isEdit ? "Update Problem" : "Create Problem"}
             </button>
             <button

@@ -19,14 +19,15 @@ type Props = {
   problemIdFromUrl?: string;
 };
 
-export default function SolutionForm({
-  problemIdFromUrl,
-}: Props) {
+export default function SolutionForm({ problemIdFromUrl }: Props) {
   const router = useRouter();
   const isEdit = !!problemIdFromUrl;
 
   const [problems, setProblems] = useState<ProblemOption[]>([]);
   const [loading, setLoading] = useState(isEdit);
+
+  // 1. Hints ke liye local string state banayi
+  const [hintsInput, setHintsInput] = useState<string>("");
 
   const [form, setForm] = useState(() => ({
     problemId: problemIdFromUrl ?? "",
@@ -56,10 +57,7 @@ export default function SolutionForm({
 
     (async () => {
       try {
-        const res =
-          await getAdminSolutionByProblemId(
-            problemIdFromUrl
-          );
+        const res = await getAdminSolutionByProblemId(problemIdFromUrl);
 
         if (!mounted) return;
 
@@ -73,6 +71,12 @@ export default function SolutionForm({
           code: s.code || {},
           youtubeLink: s.youtubeLink || "",
         });
+
+        // 2. Edit mode mein data aane par hintsInput ko string mein set karo
+        if (s.hints && s.hints.length > 0) {
+          setHintsInput(s.hints.join("\n"));
+        }
+
       } finally {
         if (mounted) setLoading(false);
       }
@@ -85,7 +89,20 @@ export default function SolutionForm({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await saveAdminSolution(form);
+
+    // 3. Submit karte time enter (\n) ke basis pe array mein convert karo
+    const processedHints = hintsInput
+      .split("\n")
+      .map((h) => h.trim())
+      .filter(Boolean);
+
+    // Form data mein processed hints add karke payload banao
+    const payload = {
+      ...form,
+      hints: processedHints,
+    };
+
+    await saveAdminSolution(payload);
     router.push("/admin/solutions");
   };
 
@@ -100,7 +117,7 @@ export default function SolutionForm({
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-10">
       <div className="card animate-scale-in">
         {/* Header */}
         <div className="mb-8">
@@ -187,16 +204,9 @@ export default function SolutionForm({
             <textarea
               placeholder="Hint 1: Think about using a hashmap&#10;Hint 2: Consider the time complexity&#10;Hint 3: Can you optimize the space?"
               className="input-field"
-              rows={4}
-              value={form.hints.join("\n")}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  hints: e.target.value
-                    .split("\n")
-                    .filter(Boolean),
-                })
-              }
+              rows={5}
+              value={hintsInput} // Fix: Local state use kiya
+              onChange={(e) => setHintsInput(e.target.value)} // Fix: Har bar seedha text update hoga
             />
             <p className="text-xs text-muted">Each line will be a separate hint</p>
           </div>
@@ -204,9 +214,7 @@ export default function SolutionForm({
           {/* Code Editor */}
           <CodeEditorGroup
             code={form.code}
-            onChange={(code) =>
-              setForm({ ...form, code })
-            }
+            onChange={(code) => setForm({ ...form, code })}
           />
 
           {/* YouTube Link */}
