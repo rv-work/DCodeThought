@@ -4,16 +4,22 @@ import Report from "../models/Report.js";
 export const addReport = async (req, res) => {
   try {
     const { slug } = req.params;
+    const { title, description, screenshot } = req.body;
 
-    // find problem by slug
+    if (!title || !description) {
+      return res.status(400).json({ message: "Title and description are required" });
+    }
+
     const problem = await Problem.findOne({ slug });
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
 
     const report = await Report.create({
-      ...req.body,
-      problemId: problem._id,   // REQUIRED
+      title,
+      description,
+      screenshot,
+      problemId: problem._id,
       userId: req.user._id,
     });
 

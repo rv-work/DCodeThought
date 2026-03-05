@@ -11,7 +11,9 @@ import type {
   ProblemListResponse,
 } from "@/types/problem";
 import Navbar from "@/components/navbar/Navbar";
-import { Code2, Filter } from "lucide-react";
+import { Code2, Filter, Layers } from "lucide-react";
+import toast from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 export default function ProblemsPage() {
   const [filters, setFilters] = useState<ProblemFiltersType>({
@@ -31,52 +33,47 @@ export default function ProblemsPage() {
         const result = await getProblems(filters);
         if (isMounted) setData(result);
       } catch (err) {
-        console.error(err);
+        toast.error(parseError(err));
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
     fetchProblems();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [filters]);
-
 
   return (
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-background py-12">
+      <div className="min-h-screen bg-background py-12 relative overflow-hidden">
+        {/* Ambient Background Glows */}
+        <div className="absolute top-0 left-0 w-125 h-125 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-125 h-125 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
         {/* Header */}
-        <div className="max-w-7xl mx-auto px-6 mb-12">
+        <div className="max-w-7xl mx-auto px-6 mb-12 relative z-10">
           <div className="text-center space-y-6 animate-fade-in-up">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-semibold">
-              <Code2 className="w-4 h-4" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-500 text-sm font-bold tracking-wide uppercase">
+              <Layers className="w-4 h-4" />
               All Problems
             </div>
-
-            {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Problem Library
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground">
+              Problem <span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-blue-500">Library</span>
             </h1>
-
-            {/* Description */}
             <p className="text-muted text-lg max-w-2xl mx-auto">
-              Browse through all solved problems with detailed Java-first explanations
+              Browse through all solved problems with detailed thought-first explanations and multi-language code.
             </p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           {/* Filters */}
-          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-            <div className="flex items-center gap-2 mb-4 text-sm text-muted">
-              <Filter className="w-4 h-4" />
+          <div className="mb-10 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+            <div className="flex items-center gap-2 mb-4 text-sm font-bold text-foreground uppercase tracking-wide">
+              <Filter className="w-4 h-4 text-purple-500" />
               <span>Filter & Sort</span>
             </div>
             <ProblemFilters
@@ -96,20 +93,20 @@ export default function ProblemsPage() {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="h-48 rounded-2xl bg-background-secondary border border-border-subtle animate-pulse"
+                  className="h-48 rounded-3xl bg-background-secondary/50 border border-border-subtle animate-pulse"
                 />
               ))}
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.problems.map((p: PublicProblem) => (
                   <ProblemCard key={p._id} problem={p} />
                 ))}
               </div>
 
               {data && data.totalPages > 0 && (
-                <div className="mt-12">
+                <div className="mt-16">
                   <Pagination
                     page={data.page}
                     totalPages={data.totalPages}
@@ -124,13 +121,13 @@ export default function ProblemsPage() {
               )}
 
               {data && data.problems.length === 0 && (
-                <div className="text-center py-20">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/10 mb-6">
-                    <Code2 className="w-10 h-10 text-accent" />
+                <div className="text-center py-24 bg-background-secondary/30 backdrop-blur-md rounded-3xl border border-border-subtle mt-8">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-purple-500/10 mb-6 border border-purple-500/20">
+                    <Code2 className="w-10 h-10 text-purple-500" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">No Problems Found</h3>
-                  <p className="text-muted">
-                    Try adjusting your filters or search criteria
+                  <h3 className="text-2xl font-bold mb-3 text-foreground">No Problems Found</h3>
+                  <p className="text-muted text-lg">
+                    Try adjusting your filters or search criteria.
                   </p>
                 </div>
               )}

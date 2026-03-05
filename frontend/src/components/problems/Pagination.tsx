@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
 export default function Pagination({
   page,
@@ -48,47 +48,49 @@ export default function Pagination({
       <button
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
-        className="flex items-center justify-center w-10 h-10 rounded-lg border border-border-subtle bg-background-secondary hover:border-accent hover:bg-accent/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+        className="flex items-center justify-center w-11 h-11 rounded-xl border border-border-subtle bg-background-secondary hover:border-purple-500/30 hover:bg-purple-500/5 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer group"
       >
-        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+        <ChevronLeft className="w-5 h-5 text-foreground group-hover:-translate-x-0.5 transition-transform" />
       </button>
 
       {/* Page Numbers */}
-      {getPageNumbers().map((pageNum, idx) => {
-        if (pageNum === "...") {
+      <div className="flex items-center gap-1 bg-background-secondary/50 backdrop-blur-md p-1 rounded-2xl border border-border-subtle">
+        {getPageNumbers().map((pageNum, idx) => {
+          if (pageNum === "...") {
+            return (
+              <div
+                key={`ellipsis-${idx}`}
+                className="flex items-center justify-center w-10 h-10 text-muted"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </div>
+            );
+          }
+
+          const isActive = pageNum === page;
+
           return (
-            <div
-              key={`ellipsis-${idx}`}
-              className="flex items-center justify-center w-10 h-10 text-muted"
+            <button
+              key={pageNum}
+              onClick={() => onChange(pageNum as number)}
+              className={`flex items-center justify-center w-10 h-10 rounded-xl font-bold transition-all cursor-pointer text-sm ${isActive
+                  ? "bg-foreground text-background shadow-md"
+                  : "text-muted hover:text-foreground hover:bg-background"
+                }`}
             >
-              ...
-            </div>
+              {pageNum}
+            </button>
           );
-        }
-
-        const isActive = pageNum === page;
-
-        return (
-          <button
-            key={pageNum}
-            onClick={() => onChange(pageNum as number)}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg border font-semibold transition-all cursor-pointer ${isActive
-                ? "border-accent bg-accent text-white shadow-lg"
-                : "border-border-subtle bg-background-secondary hover:border-accent hover:bg-accent/5"
-              }`}
-          >
-            {pageNum}
-          </button>
-        );
-      })}
+        })}
+      </div>
 
       {/* Next Button */}
       <button
         onClick={() => onChange(page + 1)}
         disabled={page === totalPages}
-        className="flex items-center justify-center w-10 h-10 rounded-lg border border-border-subtle bg-background-secondary hover:border-accent hover:bg-accent/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+        className="flex items-center justify-center w-11 h-11 rounded-xl border border-border-subtle bg-background-secondary hover:border-purple-500/30 hover:bg-purple-500/5 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer group"
       >
-        <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+        <ChevronRight className="w-5 h-5 text-foreground group-hover:translate-x-0.5 transition-transform" />
       </button>
     </div>
   );

@@ -13,36 +13,36 @@ export default function ThoughtToggle({
   const [lang, setLang] = useState<"hi" | "en">("hi");
 
   return (
-    <div className="space-y-4">
-      {/* Language Toggle */}
+    <div className="space-y-6">
+      {/* iOS-Style Language Toggle */}
       {engThought && (
-        <div className="flex items-center gap-2">
-          <Languages className="w-4 h-4 text-muted" />
-          <div className="inline-flex rounded-lg bg-background-tertiary border border-border p-1">
+        <div className="flex items-center gap-3">
+          <Languages className="w-5 h-5 text-purple-500" />
+          <div className="inline-flex rounded-xl bg-background border border-border-subtle p-1.5 shadow-inner">
             <button
               onClick={() => setLang("hi")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${lang === "hi"
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-muted hover:text-foreground"
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 cursor-pointer ${lang === "hi"
+                  ? "bg-foreground text-background shadow-md scale-100"
+                  : "text-muted hover:text-foreground scale-95"
                 }`}
             >
-              Hindi
+              Hinglish / Hindi
             </button>
             <button
               onClick={() => setLang("en")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${lang === "en"
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-muted hover:text-foreground"
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 cursor-pointer ${lang === "en"
+                  ? "bg-foreground text-background shadow-md scale-100"
+                  : "text-muted hover:text-foreground scale-95"
                 }`}
             >
-              English
+              Pure English
             </button>
           </div>
         </div>
       )}
 
-      {/* Thought Content */}
-      <div className="p-6 rounded-xl bg-background-tertiary border border-border text-sm leading-relaxed whitespace-pre-line">
+      {/* Thought Content Panel */}
+      <div className="p-6 md:p-8 rounded-3xl bg-background border border-border-subtle text-base md:text-lg leading-loose text-muted whitespace-pre-line shadow-sm">
         {lang === "hi" ? myThought : engThought}
       </div>
     </div>

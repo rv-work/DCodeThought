@@ -3,10 +3,11 @@ import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "DCodeThought",
-  description: "Java-first LeetCode explanations",
+  title: "DCodeThought | Decode the Logic",
+  description: "Thought-first LeetCode explanations with multi-language solutions (C++, Java, Python)",
 };
 
 export default function RootLayout({
@@ -26,6 +27,18 @@ export default function RootLayout({
             </GoogleOAuthProvider>
           </div>
         </ThemeProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "#333",
+              color: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)",
+            },
+          }}
+        />
       </body>
     </html >
   );

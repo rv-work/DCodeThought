@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LoginPayload, SignupPayload, AuthResponse } from "@/types/auth";
+import toast from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 type Mode = "login" | "signup";
 
@@ -43,21 +45,35 @@ export default function EmailAuthForm<T extends Mode>({
     setLoading(true);
     setError("");
 
-    try {
-      if (mode === "login") {
-        await onSubmit({
-          email: form.email,
-          password: form.password,
-        } as PayloadByMode<T>);
-      } else {
-        await onSubmit(form as PayloadByMode<T>);
-      }
+    const payload =
+      mode === "login"
+        ? { email: form.email, password: form.password }
+        : form;
 
+    try {
+      await toast.promise(
+        onSubmit(payload as PayloadByMode<T>),
+        {
+          loading: mode === "login" ? "Logging you in..." : "Creating your account...",
+          success:
+            mode === "login" ? "Logged in successfully 🎉" : "Account created 🎉",
+          error: (err) => {
+            const message =
+              err instanceof Error ? err.message : "Something went wrong";
+            setError(message);
+            return message;
+          },
+        }
+      );
+
+      // SUCCESS → HOME PE REDIRECT
       router.push("/");
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      // ❌ Already handled by toast.promise, yaha kuch nahi karna
+      console.log(parseError(err))
     } finally {
-      setLoading(false);
+      setLoading(false); // ALWAYS STOP LOADING
     }
   };
 

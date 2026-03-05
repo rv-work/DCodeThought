@@ -9,6 +9,8 @@ import RequestCard from "@/components/requests/RequestCard";
 import RequestForm from "@/components/requests/RequestForm";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, Plus } from "lucide-react";
+import toast from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 export default function RequestsPage() {
   const [type, setType] = useState<"question" | "feature">("question");
@@ -28,17 +30,22 @@ export default function RequestsPage() {
     fetchRequests();
   }, [type]);
 
-  // FIXED: Type-safe, correct state update
-  const handleVote = async (id: string) => {
-    const res = await toggleRequestVote(id); // typed votes[]
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r._id === id
-          ? { ...r, votes: res.votes } // exact PublicRequest type
-          : r
-      )
-    );
+
+  const handleVote = async (id: string) => {
+    try {
+      const res = await toggleRequestVote(id);
+
+      setRequests((prev) =>
+        prev.map((r) =>
+          r._id === id ? { ...r, votes: res.votes } : r
+        )
+      );
+
+      toast.success("Vote updated 🔼");
+    } catch (err: unknown) {
+      toast.error(parseError(err));
+    }
   };
 
   return (

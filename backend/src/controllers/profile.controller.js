@@ -2,40 +2,70 @@ import User from "../models/User.js";
 import Report from "../models/Report.js";
 import Request from "../models/Request.js";
 
-// -------- BASIC PROFILE --------
 export const getMyProfile = async (req, res) => {
-  res.json({
-    success: true,
-    user: req.user,
-  });
+  try {
+    return res.json({ success: true, user: req.user });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to fetch profile",
+    });
+  }
 };
 
-// -------- MY REPORTS --------
 export const getMyReports = async (req, res) => {
-  const reports = await Report.find({ userId: req.user._id })
-    .populate("problemId", "title slug")
-    .sort({ createdAt: -1 });
+  try {
+    const reports = await Report.find({ userId: req.user._id })
+      .populate("problemId", "title slug")
+      .sort({ createdAt: -1 });
 
-  res.json({ success: true, reports });
+    return res.json({ success: true, reports });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to load reports",
+    });
+  }
 };
 
-// -------- MY REQUESTS --------
 export const getMyRequests = async (req, res) => {
-  const requests = await Request.find({ createdBy: req.user._id })
-    .sort({ createdAt: -1 });
+  try {
+    const requests = await Request.find({ createdBy: req.user._id })
+      .sort({ createdAt: -1 });
 
-  res.json({ success: true, requests });
+    return res.json({ success: true, requests });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to load your requests",
+    });
+  }
 };
 
-// -------- RECENTLY VIEWED --------
 export const getMyRecentProblems = async (req, res) => {
-  const user = await User.findById(req.user._id).populate(
-    "recentlyViewed.problemId",
-    "problemNumber title slug difficulty"
-  );
+  try {
+    const user = await User.findById(req.user._id).populate(
+      "recentlyViewed.problemId",
+      "problemNumber title slug difficulty"
+    );
 
-  res.json({
-    success: true,
-    recent: user.recentlyViewed,
-  });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const recent = user.recentlyViewed.filter((r) => r.problemId);
+
+    return res.json({
+      success: true,
+      recent,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to load recent activity",
+    });
+  }
 };

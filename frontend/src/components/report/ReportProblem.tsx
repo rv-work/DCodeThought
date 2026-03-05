@@ -4,6 +4,8 @@ import { useState } from "react";
 import { reportProblem } from "@/api/report.api";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, Send, Loader2, CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 type Props = {
   slug: string;
@@ -29,11 +31,15 @@ export default function ReportProblem({ slug }: Props) {
         description,
         screenshot: screenshot || undefined,
       });
+
       setTitle("");
       setDescription("");
       setScreenshot("");
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 3000);
+
+    } catch (err) {
+      toast.error(parseError(err));
     } finally {
       setLoading(false);
     }

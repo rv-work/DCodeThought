@@ -6,17 +6,20 @@ import { cacheDel } from "../../services/cache.service.js";
 export const getAllRequestsAdmin = async (req, res) => {
   try {
     const requests = await Request.find()
-  .populate("createdBy", "name email")
-  .sort({ votes: -1 });
+      .populate("createdBy", "name email")
+      .sort({ votes: -1 });
 
-const formatted = requests.map(r => ({
-  ...r.toObject(),
-  votes: r.votes.length,   // <---- FIX
-}));
+    const formatted = requests.map((r) => ({
+      ...r.toObject(),
+      votes: r.votes.length,
+    }));
 
-res.json({ success: true, requests: formatted });
-  } catch {
-    res.status(500).json({ message: "Failed to load requests" });
+    return res.json({ success: true, requests: formatted });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Failed to load requests",
+    });
   }
 };
 
@@ -33,14 +36,19 @@ export const markRequestCompleted = async (req, res) => {
     );
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
     }
 
-    // 🔥 Clear affected public cache
     await cacheDel("home:stats");
 
-    res.json({ success: true, request });
-  } catch {
-    res.status(500).json({ message: "Update failed" });
+    return res.json({ success: true, request });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Update failed",
+    });
   }
 };

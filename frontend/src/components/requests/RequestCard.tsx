@@ -29,98 +29,108 @@ export default function RequestCard({ request, onVote }: Props) {
   };
 
   return (
-    <div className="group rounded-2xl bg-background-secondary border border-border-subtle p-6 hover:shadow-xl transition-all">
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-accent to-purple-500 flex items-center justify-center text-white shrink-0">
-          <User className="w-5 h-5" />
+    <div className="group rounded-4xl bg-background-secondary/40 backdrop-blur-md border border-border-subtle p-6 md:p-8 hover:border-purple-500/30 hover:shadow-[0_10px_40px_-10px_rgba(168,85,247,0.1)] transition-all duration-300 relative overflow-hidden">
+
+      {/* Subtle hover gradient */}
+      <div className="absolute inset-0 bg-linear-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+      <div className="relative flex flex-col md:flex-row items-start gap-6">
+
+        {/* User Avatar */}
+        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-purple-500/20">
+          <User className="w-6 h-6" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <h3 className="font-bold text-lg">{request.title}</h3>
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 w-full">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
 
-            <div className="flex items-center gap-2 shrink-0">
-              {request.completed && (
-                <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-green-500/10 text-green-500 text-xs font-semibold">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Completed
+            {/* Title & Type */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${request.type === "question"
+                  ? "bg-blue-500/10 text-blue-500 border border-blue-500/20"
+                  : "bg-purple-500/10 text-purple-500 border border-purple-500/20"
+                  }`}>
+                  {request.type}
                 </div>
-              )}
 
-              {isEligible && !request.completed && (
-                <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-500 text-xs font-semibold">
-                  <AlertCircle className="w-3 h-3" />
-                  Under Review
-                </div>
-              )}
+                {request.completed && (
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-extrabold uppercase tracking-wider">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Completed
+                  </div>
+                )}
 
-              <div
-                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize ${request.type === "question"
-                  ? "bg-blue-500/10 text-blue-500"
-                  : "bg-purple-500/10 text-purple-500"
-                  }`}
-              >
-                {request.type}
+                {isEligible && !request.completed && (
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-extrabold uppercase tracking-wider">
+                    <AlertCircle className="w-3 h-3" />
+                    Under Review
+                  </div>
+                )}
               </div>
+              <h3 className="font-extrabold text-xl text-foreground group-hover:text-purple-400 transition-colors leading-tight">
+                {request.title}
+              </h3>
+            </div>
+
+            {/* Vote Count Badge (Desktop Top Right) */}
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-background border border-border-subtle shadow-sm shrink-0">
+              <ThumbsUp className={`w-4 h-4 ${hasVoted ? "text-purple-500" : "text-muted"}`} />
+              <span className="font-extrabold text-foreground">{votesCount}</span>
+              <span className="text-xs font-bold text-muted uppercase">Votes</span>
             </div>
           </div>
 
-          <p className="text-sm text-muted leading-relaxed mb-4">
+          <p className="text-base text-muted leading-relaxed mb-6">
             {request.description}
           </p>
 
+          {/* Bottom Actions Row */}
+          <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border-subtle/50">
 
-          {request.type === "question" && request.leetcodeLink && (
-            <a
-              href={request.leetcodeLink}
-              target="_blank"
-              className="inline-flex items-center gap-2 text-accent text-sm font-medium hover:text-accent/80 transition-colors"
-            >
-              <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center">
-                <ExternalLink className="w-4 h-4" />
-              </div>
-              View LeetCode Problem
-            </a>
-          )}
-
-
-
-          <div className="flex items-center gap-4 mt-4">
+            {/* Vote Button */}
             {user && !request.completed && (
               <button
                 onClick={handleClick}
                 disabled={loading}
-                className={` flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all cursor-pointer
-    ${hasVoted
-                    ? "bg-red-600/90 hover:bg-red-600 text-white"
-                    : "bg-linear-to-r from-accent to-purple-500 text-white"
-                  }`}
+                className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all cursor-pointer
+                  ${hasVoted
+                    ? "bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500/20"
+                    : "bg-background border border-border-subtle hover:border-purple-500/50 hover:text-purple-500"
+                  }
+                `}
               >
                 {loading ? (
-                  <div className="px-4 py-1">
-                    <Loader2 className="w-4 h-4  animate-spin" />
-                  </div>
-
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <ThumbsUp className={`w-4 h-4 ${hasVoted ? "rotate-180" : ""}`} />
-                    <span>{hasVoted ? "Downvote" : "Upvote"}</span>
+                    <ThumbsUp className={`w-4 h-4 ${hasVoted ? "fill-current" : ""}`} />
+                    <span>{hasVoted ? "Remove Vote" : "Upvote Request"}</span>
                   </>
                 )}
               </button>
             )}
 
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-tertiary border border-border">
-              <ThumbsUp className="w-4 h-4 text-accent" />
-              <span className="font-semibold">{votesCount}</span>
-              <span className="text-sm text-muted">votes</span>
+            {/* Mobile Vote Count (Visible only on small screens) */}
+            <div className="md:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl bg-background border border-border-subtle shadow-sm shrink-0">
+              <ThumbsUp className="w-4 h-4 text-purple-500" />
+              <span className="font-extrabold text-foreground">{votesCount}</span>
             </div>
 
-            {isEligible && !request.completed && (
-              <div className="text-sm text-muted">
-                ✨ Eligible for priority review
-              </div>
+            {/* LeetCode Link */}
+            {request.type === "question" && request.leetcodeLink && (
+              <a
+                href={request.leetcodeLink}
+                target="_blank"
+                rel="noreferrer"
+                className="group/link flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500/5 border border-blue-500/20 text-blue-500 text-sm font-bold hover:bg-blue-500/10 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5 transition-transform" />
+                View LeetCode
+              </a>
             )}
+
           </div>
         </div>
       </div>

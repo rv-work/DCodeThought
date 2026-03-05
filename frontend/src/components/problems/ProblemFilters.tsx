@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProblemFiltersType } from "@/types/problem";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 
 type Props = {
   onChange: (filters: Partial<ProblemFiltersType>) => void;
@@ -9,20 +9,15 @@ type Props = {
 
 export default function ProblemFilters({ onChange }: Props) {
   return (
-    <div className="rounded-2xl bg-background-secondary border border-border-subtle p-6">
-      <div className="flex items-center gap-2 mb-4 text-sm text-muted">
-        <SlidersHorizontal className="w-4 h-4" />
-        <span className="font-semibold">Filters</span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="rounded-3xl bg-background-secondary/60 backdrop-blur-xl border border-border-subtle p-3 shadow-lg">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
           <input
             placeholder="Search problems..."
             onChange={(e) => onChange({ search: e.target.value })}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-text"
+            className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-background border border-transparent text-sm text-foreground focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all placeholder:text-muted"
           />
         </div>
 
@@ -30,14 +25,10 @@ export default function ProblemFilters({ onChange }: Props) {
         <select
           onChange={(e) =>
             onChange({
-              difficulty: e.target.value as
-                | "Easy"
-                | "Medium"
-                | "Hard"
-                | undefined,
+              difficulty: e.target.value as "Easy" | "Medium" | "Hard" | undefined,
             })
           }
-          className="px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-pointer"
+          className="px-4 py-3.5 rounded-2xl bg-background border border-transparent text-sm text-foreground focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all cursor-pointer appearance-none"
         >
           <option value="">All Difficulties</option>
           <option value="Easy">Easy</option>
@@ -49,14 +40,10 @@ export default function ProblemFilters({ onChange }: Props) {
         <select
           onChange={(e) =>
             onChange({
-              type: e.target.value as
-                | "potd"
-                | "contest"
-                | "requested"
-                | undefined,
+              type: e.target.value as "potd" | "contest" | "requested" | undefined,
             })
           }
-          className="px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-pointer"
+          className="px-4 py-3.5 rounded-2xl bg-background border border-transparent text-sm text-foreground focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all cursor-pointer appearance-none"
         >
           <option value="">All Types</option>
           <option value="potd">POTD</option>
@@ -71,7 +58,7 @@ export default function ProblemFilters({ onChange }: Props) {
               sort: e.target.value as "newest" | "oldest",
             })
           }
-          className="px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-pointer"
+          className="px-4 py-3.5 rounded-2xl bg-background border border-transparent text-sm text-foreground focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 outline-none transition-all cursor-pointer appearance-none"
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>

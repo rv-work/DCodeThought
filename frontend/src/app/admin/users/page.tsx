@@ -7,16 +7,26 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminTable from "@/components/admin/AdminTable";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import { toast } from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAdminUsers().then((res) => {
-      setUsers(res.users);
-      setLoading(false);
-    });
+    const load = async () => {
+      try {
+        const res = await getAdminUsers();
+        setUsers(res.users);
+      } catch (err) {
+        toast.error(parseError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   if (loading) {

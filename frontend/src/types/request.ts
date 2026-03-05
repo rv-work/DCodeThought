@@ -3,7 +3,7 @@ export type AdminRequest = {
   type: "feature" | "question";
   title: string;
   description: string;
-  votes: { userId: string }[]; // FIXED
+  votes: number; // ✔ FIXED (votes.length)
   completed: boolean;
   createdAt: string;
   createdBy: {

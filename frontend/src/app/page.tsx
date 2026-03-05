@@ -5,12 +5,12 @@ import Stats from "@/components/home/Stats";
 import Trust from "@/components/home/Trust";
 import WhoIsThisFor from "@/components/home/WhoIsThisFor";
 import Difference from "@/components/home/Difference";
-import ProblemWalkthrough from "@/components/home/ProblemWalkthrough";
 import PotdPhilosophy from "@/components/home/PotdPhilosophy";
 import DailyValue from "@/components/home/DailyValue";
 import Community from "@/components/home/Community";
 import Vision from "@/components/home/Vision";
 import CTA from "@/components/home/CTA";
+import HowItWorks from "@/components/home/HowItWorks";
 
 export default function HomePage() {
   return (
@@ -21,7 +21,7 @@ export default function HomePage() {
       <WhoIsThisFor />
       <Features />
       <Difference />
-      <ProblemWalkthrough />
+      <HowItWorks />
       <PotdPhilosophy />
       <DailyValue />
       <Stats />

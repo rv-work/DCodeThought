@@ -14,7 +14,9 @@ const applyVote = (votes, userId, value) => {
 };
 
 export const getCommentsByProblemSlug = async (req, res) => {
-  const problem = await Problem.findOne({ slug: req.params.slug });
+  const { slug } = req.params;
+
+  const problem = await Problem.findOne({ slug });
   if (!problem) return res.json({ success: true, comments: [] });
 
   const comments = await Comment.find({ problemId: problem._id })

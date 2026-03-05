@@ -1,24 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getAdminRequests,
-  updateRequestStatus,
-} from "@/api/admin.request.api";
+import { getAdminRequests, updateRequestStatus } from "@/api/admin.request.api";
 import type { AdminRequest } from "@/types/request";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminLoading from "@/components/admin/AdminLoading";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import { toast } from "react-hot-toast";
+import { parseError } from "@/utils/parseError";
 
 export default function AdminRequestsPage() {
   const [requests, setRequests] = useState<AdminRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAdminRequests().then((res) => {
-      setRequests(res.requests);
-      setLoading(false);
-    });
+    const load = async () => {
+      try {
+        const res = await getAdminRequests();
+        setRequests(res.requests);
+      } catch (err) {
+        toast.error(parseError(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   if (loading) {
@@ -54,12 +60,15 @@ export default function AdminRequestsPage() {
               style={{ animationDelay: `${0.1 * idx}s` }}
             >
               <div className="flex items-start justify-between gap-4">
+                {/* LEFT SIDE CONTENT */}
                 <div className="flex items-start gap-4 flex-1">
-                  {/* Status Icon */}
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shrink-0 ${r.completed
-                    ? "bg-linear-to-br from-green-500 to-emerald-500 text-white"
-                    : "bg-linear-to-br from-blue-500 to-cyan-500 text-white"
-                    }`}>
+                  {/* ICON */}
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shrink-0 ${r.completed
+                        ? "bg-linear-to-br from-green-500 to-emerald-500 text-white"
+                        : "bg-linear-to-br from-blue-500 to-cyan-500 text-white"
+                      }`}
+                  >
                     {r.completed ? (
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -71,25 +80,30 @@ export default function AdminRequestsPage() {
                     )}
                   </div>
 
-                  {/* Content */}
+                  {/* TEXT CONTENT */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${r.type === "feature"
-                        ? "bg-purple-500/10 text-purple-500"
-                        : "bg-blue-500/10 text-blue-500"
-                        }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-xs font-semibold ${r.type === "feature"
+                            ? "bg-purple-500/10 text-purple-500"
+                            : "bg-blue-500/10 text-blue-500"
+                          }`}
+                      >
                         {r.type}
                       </span>
                       <h3 className="font-bold text-lg">{r.title}</h3>
                     </div>
+
                     <p className="text-muted mb-3">{r.description}</p>
+
                     <div className="flex items-center gap-4 text-xs">
                       <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 text-accent font-semibold">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
-                        {Array.isArray(r.votes) ? r.votes.length : r.votes} votes
+                        {r.votes} votes
                       </div>
+
                       <div className="px-2 py-1 rounded-md bg-background-tertiary border border-border">
                         <span className="text-muted">by </span>
                         <span className="font-medium">{r.createdBy.name}</span>
@@ -98,24 +112,28 @@ export default function AdminRequestsPage() {
                   </div>
                 </div>
 
-                {/* Toggle */}
+                {/* RIGHT SIDE TOGGLE */}
                 <label className="flex items-center gap-3 cursor-pointer shrink-0 group">
                   <span className="text-sm font-medium text-muted group-hover:text-foreground transition-colors">
                     {r.completed ? "Completed" : "Pending"}
                   </span>
+
                   <div className="relative">
                     <input
                       type="checkbox"
                       checked={r.completed}
-                      onChange={(e) => {
-                        updateRequestStatus(r._id, e.target.checked);
-                        setRequests((prev) =>
-                          prev.map((x) =>
-                            x._id === r._id
-                              ? { ...x, completed: e.target.checked }
-                              : x
-                          )
-                        );
+                      onChange={async (e) => {
+                        try {
+                          await updateRequestStatus(r._id, e.target.checked);
+                          setRequests((prev) =>
+                            prev.map((x) =>
+                              x._id === r._id ? { ...x, completed: e.target.checked } : x
+                            )
+                          );
+                          toast.success("Updated ✔");
+                        } catch (err) {
+                          toast.error(parseError(err));
+                        }
                       }}
                       className="sr-only peer"
                     />

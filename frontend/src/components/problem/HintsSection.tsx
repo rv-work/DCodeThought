@@ -11,51 +11,46 @@ export default function HintsSection({ hints }: { hints: string[] }) {
   const toggleHint = (index: number) => {
     setOpenHints((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
+      if (newSet.has(index)) newSet.delete(index);
+      else newSet.add(index);
       return newSet;
     });
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {hints.map((hint, idx) => {
         const isOpen = openHints.has(idx);
 
         return (
           <div
             key={idx}
-            className="rounded-xl border border-border-subtle bg-background-tertiary overflow-hidden transition-all"
+            className={`rounded-2xl border transition-all duration-300 overflow-hidden ${isOpen
+                ? "bg-background border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.05)]"
+                : "bg-background/50 border-border-subtle hover:border-border"
+              }`}
           >
             <button
               onClick={() => toggleHint(idx)}
-              className="w-full flex items-center justify-between p-4 hover:bg-background-secondary transition-colors cursor-pointer group"
+              className="w-full flex items-center justify-between p-5 cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 font-bold text-sm">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-colors ${isOpen ? "bg-orange-500 text-white shadow-md" : "bg-orange-500/10 text-orange-500 group-hover:bg-orange-500/20"}`}>
                   {idx + 1}
                 </div>
-                <span className="font-semibold">Hint {idx + 1}</span>
+                <span className={`font-bold text-lg ${isOpen ? "text-foreground" : "text-muted group-hover:text-foreground transition-colors"}`}>
+                  Reveal Hint {idx + 1}
+                </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                {isOpen ? (
-                  <Eye className="w-4 h-4 text-accent" />
-                ) : (
-                  <EyeOff className="w-4 h-4 text-muted" />
-                )}
-                <ChevronDown
-                  className={`w-5 h-5 text-muted transition-transform ${isOpen ? "rotate-180" : ""
-                    }`}
-                />
+              <div className="flex items-center gap-3">
+                {isOpen ? <Eye className="w-5 h-5 text-orange-500" /> : <EyeOff className="w-5 h-5 text-muted" />}
+                <ChevronDown className={`w-5 h-5 text-muted transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
               </div>
             </button>
 
             {isOpen && (
-              <div className="px-4 pb-4 text-sm text-muted leading-relaxed animate-fade-in">
+              <div className="px-5 pb-6 pt-2 text-base text-muted leading-relaxed animate-fade-in border-t border-border-subtle/50 ml-18">
                 {hint}
               </div>
             )}
