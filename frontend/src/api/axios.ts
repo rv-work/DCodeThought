@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
 
 const api = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  baseURL: "http://localhost:5100",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  // baseURL: "http://localhost:5100",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
