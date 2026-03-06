@@ -12,7 +12,12 @@ export type Solution = {
   engThought?: string;
 
   // 🔥 normalized frontend shape
-  code?: Record<string, string>;
+  codeBlocks?: CodeBlock[];
 
   youtubeLink?: string;
+};
+
+export type CodeBlock = {
+  language: string;
+  code: string;
 };

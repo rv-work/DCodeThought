@@ -5,7 +5,11 @@ import CodeTabs from "./CodeTabs";
 import { Youtube, Code2, Lightbulb, BrainCircuit } from "lucide-react";
 
 export default function SolutionSection({ solution }: { solution: Solution }) {
-  const codeObj = solution.code || {};
+
+  const codeObj = Object.fromEntries(
+    (solution.codeBlocks || []).map((b) => [b.language, b.code])
+  );
+
 
   return (
     <div className="space-y-8">

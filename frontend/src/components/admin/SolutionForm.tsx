@@ -160,10 +160,10 @@ export default function SolutionForm({ problemIdFromUrl }: Props) {
           {/* Hindi Thought */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold">
-              My Thought (Hindi) <span className="text-red-500">*</span>
+              My Thought (Hinglish) <span className="text-red-500">*</span>
             </label>
             <textarea
-              placeholder="समस्या को हिंदी में समझाएं..."
+              placeholder="Explain in your language..."
               className="input-field"
               rows={6}
               value={form.myThought}

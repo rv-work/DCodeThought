@@ -23,14 +23,23 @@ export const getSolutionByProblemSlug = async (req, res) => {
       return res.status(404).json({ message: "Problem not found" });
     }
 
-    const solution = await Solution.findOne({
-      problemId: problem._id,
-    }).lean();
+const solution = await Solution.findOne({
+  problemId: problem._id,
+}).lean();
 
-    // 🔥 IMPORTANT: cache even null result to avoid repeated DB hits
-    await cacheSet(cacheKey, solution, 3600);
+if (solution && Array.isArray(solution.code)) {
+  const codeMap = {};
 
-    res.json({ success: true, solution });
+  solution.code.forEach((c) => {
+    codeMap[c.language] = c.code;
+  });
+
+  solution.code = codeMap;
+}
+
+await cacheSet(cacheKey, solution, 3600);
+
+res.json({ success: true, solution });
   } catch (err) {
     res.status(500).json({ message: "Failed to load solution" });
   }
