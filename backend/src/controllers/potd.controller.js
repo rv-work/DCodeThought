@@ -3,7 +3,16 @@ import { cacheGet, cacheSet } from "../services/cache.service.js";
 
 export const getTodayPotd = async (req, res) => {
   try {
-    const cacheKey = "potd:today";
+    // 1. Aaj aur Kal ki exact local boundaries nikalo
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    // 2. Date-specific cache key banao (e.g., "potd:today:2026-03-06")
+    // Isse kal ka cache aaj interfere nahi karega
+    const dateString = todayStart.toISOString().split("T")[0];
+    const cacheKey = `potd:today:${dateString}`;
+
     const cached = await cacheGet(cacheKey);
 
     if (cached) {
@@ -15,26 +24,35 @@ export const getTodayPotd = async (req, res) => {
     console.log("🗄️ getTodayPotd → MongoDB MISS");
     res.set("X-Cache", "MISS");
 
-    // Normalize today's date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Fetch from Potd collection
-    const potdEntry = await Potd.findOne({ date: today })
+    // 3. Exact equality ki jagah Range query ($gte, $lt) use karo 
+    // Taaki Timezone differences ki wajah se miss na ho
+    const potdEntry = await Potd.findOne({
+      date: { $gte: todayStart, $lt: tomorrowStart }
+    })
       .populate("problem", "problemNumber title slug difficulty tags")
       .lean();
 
-    const potd = potdEntry ? potdEntry.problem : null;
+    let potd = null;
+    
+    // 4. FIX: Frontend ko 'potdDate' chahiye tha jo missing tha!
+    if (potdEntry && potdEntry.problem) {
+      potd = {
+        ...potdEntry.problem,
+        potdDate: potdEntry.date, // Ab frontend ko Invalid Date nahi aayega
+      };
+    }
 
-    // Cache for 24 hours
-    await cacheSet(cacheKey, potd, 86400);
+    // 5. Dynamic Cache TTL: Cache ko theek raat 12 baje expire karo, na ki 24 ghante baad
+    const msUntilMidnight = tomorrowStart.getTime() - now.getTime();
+    const ttlSeconds = Math.ceil(msUntilMidnight / 1000);
+
+    await cacheSet(cacheKey, potd, ttlSeconds);
 
     res.json({ success: true, potd });
   } catch (err) {
     res.status(500).json({ message: "Failed to load POTD" });
   }
 };
-
 
 export const getPotdHistory = async (req, res) => {
   try {
@@ -65,11 +83,13 @@ export const getPotdHistory = async (req, res) => {
 
     const total = await Potd.countDocuments();
 
-    // FE ko expected shape me convert
-    const potds = potdsRaw.map((p) => ({
-      ...p.problem,
-      potdDate: p.date,
-    }));
+    // Mapping is correct here
+    const potds = potdsRaw
+      .filter(p => p.problem) // Extra safety check
+      .map((p) => ({
+        ...p.problem,
+        potdDate: p.date,
+      }));
 
     const payload = {
       success: true,
@@ -78,7 +98,6 @@ export const getPotdHistory = async (req, res) => {
       totalPages: Math.ceil(total / limitNum),
     };
 
-    // Cache for 1 hour
     await cacheSet(cacheKey, payload, 3600);
 
     res.json(payload);
@@ -86,6 +105,3 @@ export const getPotdHistory = async (req, res) => {
     res.status(500).json({ message: "Failed to load POTD history" });
   }
 };
-
-
-
