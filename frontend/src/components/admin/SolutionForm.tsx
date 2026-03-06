@@ -8,6 +8,7 @@ import {
   getAdminSolutionByProblemId,
 } from "@/api/admin.solution.api";
 import CodeEditorGroup from "./CodeEditorGroup";
+import MarkdownEditor from "./MarkdownEditor";
 
 type ProblemOption = {
   _id: string;
@@ -162,18 +163,14 @@ export default function SolutionForm({ problemIdFromUrl }: Props) {
             <label className="block text-sm font-semibold">
               My Thought (Hinglish) <span className="text-red-500">*</span>
             </label>
-            <textarea
-              placeholder="Explain in your language..."
-              className="input-field"
-              rows={6}
+            <MarkdownEditor
               value={form.myThought}
-              onChange={(e) =>
+              onChange={(v) =>
                 setForm({
                   ...form,
-                  myThought: e.target.value,
+                  myThought: v,
                 })
               }
-              required
             />
           </div>
 
@@ -182,15 +179,12 @@ export default function SolutionForm({ problemIdFromUrl }: Props) {
             <label className="block text-sm font-semibold">
               English Thought
             </label>
-            <textarea
-              placeholder="Explain the problem in English..."
-              className="input-field"
-              rows={6}
+            <MarkdownEditor
               value={form.engThought}
-              onChange={(e) =>
+              onChange={(v) =>
                 setForm({
                   ...form,
-                  engThought: e.target.value,
+                  engThought: v,
                 })
               }
             />

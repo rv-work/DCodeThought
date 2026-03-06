@@ -2,6 +2,14 @@
 
 @import "tailwindcss";
 
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@import "highlight.js/styles/github-dark.css";
+
+
+
 /* --------------------------------------------- */
 /*                BASE THEME VARIABLES           */
 /* --------------------------------------------- */
