@@ -12,23 +12,34 @@ type ThemeContextType = {
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  // ✅ Lazy init from localStorage
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "light";
-    const saved = localStorage.getItem("theme") as Theme | null;
-    return saved ?? "light";
-  });
+  // Default to system preference or fallback to 'dark' for initial SSR render
+  const [theme, setTheme] = useState<Theme>("dark");
 
-  // ✅ Effect only syncs DOM (no setState)
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    // Wrapping in setTimeout prevents the "cascading renders" error 
+    // when syncing the React state with the DOM on the first load.
+    const timer = setTimeout(() => {
+      const isDark = document.documentElement.classList.contains("dark");
+      setTheme(isDark ? "dark" : "light");
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleTheme = () => {
     setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("theme", next);
-      return next;
+      const nextTheme = prev === "light" ? "dark" : "light";
+
+      if (nextTheme === "dark") {
+        document.documentElement.classList.add("dark");
+        document.documentElement.style.colorScheme = "dark";
+      } else {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.style.colorScheme = "light";
+      }
+
+      localStorage.setItem("theme", nextTheme);
+      return nextTheme;
     });
   };
 

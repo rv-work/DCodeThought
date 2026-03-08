@@ -1,5 +1,4 @@
 import "./globals.css";
-
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -16,30 +15,48 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* BLOCKING SCRIPT: Prevents FOUC (Flash of Unstyled Content) by setting the theme before the page paints */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.style.colorScheme = 'dark';
+                } else {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.style.colorScheme = 'light';
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-purple-500/30 selection:text-purple-200 transition-colors duration-300">
         <ThemeProvider>
-          <div className="min-h-screen bg-(--bg)">
-            <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </GoogleOAuthProvider>
-          </div>
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </GoogleOAuthProvider>
         </ThemeProvider>
+
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
             style: {
-              background: "#333",
-              color: "#fff",
-              borderRadius: "12px",
-              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)",
+              background: "var(--background-secondary)",
+              color: "var(--foreground)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "16px",
+              boxShadow: "0 10px 40px -10px rgba(0,0,0,0.3)",
             },
           }}
         />
       </body>
-    </html >
+    </html>
   );
 }
