@@ -21,7 +21,7 @@ export default function ContestForm({
   const router = useRouter();
 
   const [form, setForm] = useState({
-    contestNumber: initialData?.contestNumber ?? 0,
+    contestNumber: initialData?.contestNumber ?? "",
     contestName: initialData?.contestName ?? "",
     contestDate: initialData?.contestDate
       ? new Date(initialData.contestDate)
@@ -38,6 +38,7 @@ export default function ContestForm({
 
     const payload = {
       ...form,
+      contestNumber: Number(form.contestNumber),
       contestDate: new Date(form.contestDate).toISOString(),
     };
 
@@ -59,23 +60,27 @@ export default function ContestForm({
             {isEdit ? "Edit Contest" : "Create New Contest"}
           </h1>
           <p className="text-muted">
-            {isEdit ? "Update the contest details below" : "Fill in the details to create a new contest"}
+            {isEdit
+              ? "Update the contest details below"
+              : "Fill in the details to create a new contest"}
           </p>
         </div>
 
         <form onSubmit={submit} className="space-y-6">
+
           {/* Contest Number */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold">
               Contest Number <span className="text-red-500">*</span>
             </label>
+
             <input
               type="number"
               value={form.contestNumber}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  contestNumber: Number(e.target.value),
+                  contestNumber: e.target.value,
                 })
               }
               className="input-field"
@@ -89,6 +94,7 @@ export default function ContestForm({
             <label className="block text-sm font-semibold">
               Contest Name <span className="text-red-500">*</span>
             </label>
+
             <input
               value={form.contestName}
               onChange={(e) =>
@@ -108,6 +114,7 @@ export default function ContestForm({
             <label className="block text-sm font-semibold">
               Contest Date & Time <span className="text-red-500">*</span>
             </label>
+
             <input
               type="datetime-local"
               value={form.contestDate}
@@ -127,6 +134,7 @@ export default function ContestForm({
             <label className="block text-sm font-semibold">
               Select 4 Problems <span className="text-red-500">*</span>
             </label>
+
             <ContestProblemSelector
               value={form.problems}
               onChange={(ids) =>
@@ -138,12 +146,14 @@ export default function ContestForm({
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">
+
             <button
               type="submit"
               className="flex-1 primary-btn cursor-pointer"
             >
               {isEdit ? "Update Contest" : "Create Contest"}
             </button>
+
             <button
               type="button"
               onClick={() => router.back()}
@@ -151,6 +161,7 @@ export default function ContestForm({
             >
               Cancel
             </button>
+
           </div>
         </form>
       </div>

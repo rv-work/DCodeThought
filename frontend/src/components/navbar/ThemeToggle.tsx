@@ -1,19 +1,40 @@
 "use client";
 
 import { useTheme } from "@/hooks/useTheme";
+import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  // Start with mounted = false to match the server render exactly
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Wrapping in setTimeout breaks the synchronous render cycle
+    // This fixes the "cascading renders" error!
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // During SSR and initial client paint, render a structurally identical but empty shell.
+  // This completely eliminates the hydration mismatch error!
+  if (!mounted) {
+    return (
+      <div className="relative w-11 h-11 rounded-lg flex items-center justify-center opacity-0 pointer-events-none" aria-hidden="true" />
+    );
+  }
 
   return (
     <button
       onClick={toggleTheme}
-      className="relative w-12 h-12 rounded-lg hover:bg-background-tertiary transition-all duration-300 flex items-center justify-center group"
+      className="relative w-11 h-11 rounded-lg hover:bg-background-tertiary transition-all duration-300 flex items-center justify-center group"
       aria-label="Toggle theme"
     >
       {/* Sun icon */}
       <svg
-        className={`absolute w-5 h-5 transition-all duration-500 ${theme === "dark"
+        className={`absolute w-5.5 h-5.5 transition-all duration-500 ${theme === "dark"
           ? "rotate-90 scale-0 opacity-0"
           : "rotate-0 scale-100 opacity-100"
           }`}
@@ -48,7 +69,7 @@ export default function ThemeToggle() {
       </svg>
 
       {/* Hover glow */}
-      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-accent/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur"></div>
+      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"></div>
     </button>
   );
 }

@@ -16,23 +16,32 @@ type Props = {
 export default function ProblemForm({ initialData, isEdit }: Props) {
   const router = useRouter();
 
-  const [form, setForm] = useState<ProblemDetail>(() => ({
+  const [form, setForm] = useState({
     _id: initialData?._id ?? "",
-    problemNumber: initialData?.problemNumber ?? 0,
+    problemNumber: initialData?.problemNumber ?? "",
     title: initialData?.title ?? "",
     difficulty: initialData?.difficulty ?? "Easy",
     type: initialData?.type ?? "potd",
     tags: initialData?.tags ?? [],
     leetcodeLink: initialData?.leetcodeLink ?? "",
-  }));
+  });
+
+  const [tagInput, setTagInput] = useState(
+    initialData?.tags?.join(", ") ?? ""
+  );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const payload = {
+      ...form,
+      problemNumber: Number(form.problemNumber),
+    };
+
     if (isEdit && form._id) {
-      await updateAdminProblem(form._id, form);
+      await updateAdminProblem(form._id, payload);
     } else {
-      await addAdminProblem(form);
+      await addAdminProblem(payload);
     }
 
     router.push("/admin/problems");
@@ -47,21 +56,25 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             {isEdit ? "Edit Problem" : "Add New Problem"}
           </h1>
           <p className="text-muted">
-            {isEdit ? "Update the problem details below" : "Fill in the details to create a new problem"}
+            {isEdit
+              ? "Update the problem details below"
+              : "Fill in the details to create a new problem"}
           </p>
         </div>
 
         <form onSubmit={submit} className="space-y-6">
+
           {/* Problem Number */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold">
               Problem Number <span className="text-red-500">*</span>
             </label>
+
             <input
               type="number"
               value={form.problemNumber}
               onChange={(e) =>
-                setForm({ ...form, problemNumber: Number(e.target.value) })
+                setForm({ ...form, problemNumber: e.target.value })
               }
               className="input-field"
               placeholder="e.g., 1"
@@ -74,6 +87,7 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             <label className="block text-sm font-semibold">
               Title <span className="text-red-500">*</span>
             </label>
+
             <input
               value={form.title}
               onChange={(e) =>
@@ -90,6 +104,7 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             <label className="block text-sm font-semibold">
               LeetCode Link <span className="text-red-500">*</span>
             </label>
+
             <input
               value={form.leetcodeLink}
               onChange={(e) =>
@@ -101,12 +116,14 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             />
           </div>
 
-          {/* Difficulty & Type */}
+          {/* Difficulty + Type */}
           <div className="grid md:grid-cols-2 gap-6">
+
             <div className="space-y-2">
               <label className="block text-sm font-semibold">
                 Difficulty <span className="text-red-500">*</span>
               </label>
+
               <select
                 value={form.difficulty}
                 onChange={(e) =>
@@ -128,6 +145,7 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
               <label className="block text-sm font-semibold">
                 Type <span className="text-red-500">*</span>
               </label>
+
               <select
                 value={form.type}
                 onChange={(e) =>
@@ -144,38 +162,51 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
                 <option value="requested">Requested</option>
               </select>
             </div>
+
           </div>
 
           {/* Tags */}
           <div className="space-y-2">
+
             <label className="block text-sm font-semibold">
               Tags
             </label>
+
             <input
-              placeholder="Array, Hash Table, Two Pointers (comma separated)"
+              placeholder="Array, Hash Table, Two Pointers"
               className="input-field"
-              value={form.tags.join(", ")}
-              onChange={(e) =>
+              value={tagInput}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setTagInput(value);
+
                 setForm({
                   ...form,
-                  tags: e.target.value
+                  tags: value
                     .split(",")
                     .map((tag) => tag.trim())
                     .filter(Boolean),
-                })
-              }
+                });
+              }}
             />
-            <p className="text-xs text-muted">Separate multiple tags with commas</p>
+
+            <p className="text-xs text-muted">
+              Separate multiple tags with commas
+            </p>
+
           </div>
 
           {/* Buttons */}
           <div className="flex gap-4 pt-4">
+
             <button
               type="submit"
               className="flex-1 primary-btn cursor-pointer"
             >
               {isEdit ? "Update Problem" : "Create Problem"}
             </button>
+
             <button
               type="button"
               onClick={() => router.back()}
@@ -183,7 +214,9 @@ export default function ProblemForm({ initialData, isEdit }: Props) {
             >
               Cancel
             </button>
+
           </div>
+
         </form>
       </div>
     </div>
