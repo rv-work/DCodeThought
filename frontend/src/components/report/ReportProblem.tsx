@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { reportProblem } from "@/api/report.api";
 import { useAuth } from "@/hooks/useAuth";
-import { AlertCircle, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { Send, Loader2, CheckCircle2, Lock } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 
@@ -19,7 +20,26 @@ export default function ReportProblem({ slug }: Props) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  if (!user) return null;
+  // ✅ FIX: Show a beautiful login prompt instead of returning null
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center p-10 text-center rounded-4xl bg-background-secondary/30 backdrop-blur-md">
+        <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-4 border border-rose-500/20">
+          <Lock className="w-8 h-8 text-rose-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-foreground mb-2">Login Required</h3>
+        <p className="text-muted mb-6">
+          Please log in to your account to report issues with this problem.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-foreground text-background font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+        >
+          Go to Login
+        </Link>
+      </div>
+    );
+  }
 
   const submit = async () => {
     if (!title.trim() || !description.trim()) return;
@@ -46,84 +66,73 @@ export default function ReportProblem({ slug }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-background-secondary border border-border-subtle p-8">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center text-white shadow-lg">
-          <AlertCircle className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold">Report an Issue</h2>
-          <p className="text-sm text-muted">
-            Help us improve by reporting bugs or errors
-          </p>
-        </div>
-      </div>
+    <div className="w-full">
+      {/* Header handled by parent, starting directly with Success/Form */}
 
       {/* Success Message */}
       {submitted && (
-        <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-          <div className="text-sm font-medium text-green-500">
+        <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 animate-fade-in-up">
+          <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
+          <div className="text-sm font-bold text-emerald-500">
             Report submitted successfully! We&apos;ll review it soon.
           </div>
         </div>
       )}
 
       {/* Form */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <label className="block text-sm font-semibold mb-2">
-            Issue Title <span className="text-red-500">*</span>
+          <label className="block text-sm font-bold text-foreground mb-2">
+            Issue Title <span className="text-rose-500">*</span>
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Brief summary of the issue"
-            className="w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-text"
+            className="w-full px-5 py-4 rounded-xl bg-background border border-border-subtle text-base text-foreground focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all cursor-text placeholder:text-muted/60 shadow-inner"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">
-            Description <span className="text-red-500">*</span>
+          <label className="block text-sm font-bold text-foreground mb-2">
+            Description <span className="text-rose-500">*</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the issue in detail..."
-            rows={6}
-            className="w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all resize-none cursor-text"
+            placeholder="Describe the issue in detail (e.g., 'Test case 3 is failing incorrectly...')"
+            rows={5}
+            className="w-full px-5 py-4 rounded-xl bg-background border border-border-subtle text-base text-foreground focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all resize-none cursor-text placeholder:text-muted/60 shadow-inner"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">
-            Screenshot URL (Optional)
+          <label className="block text-sm font-bold text-foreground mb-2">
+            Screenshot URL <span className="text-muted font-medium ml-1">(Optional)</span>
           </label>
           <input
             value={screenshot}
             onChange={(e) => setScreenshot(e.target.value)}
             placeholder="https://example.com/screenshot.png"
-            className="w-full px-4 py-3 rounded-xl bg-background-tertiary border border-border-subtle text-sm focus:ring-2 ring-accent focus:outline-none transition-all cursor-text"
+            className="w-full px-5 py-4 rounded-xl bg-background border border-border-subtle text-base text-foreground focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all cursor-text placeholder:text-muted/60 shadow-inner"
           />
         </div>
 
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end pt-4">
           <button
             onClick={submit}
             disabled={loading || !title.trim() || !description.trim()}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer group"
+            className="flex items-center justify-center gap-2 w-full md:w-auto px-8 py-4 rounded-xl bg-linear-to-r from-orange-500 to-rose-600 text-white font-bold shadow-[0_0_20px_rgba(244,63,94,0.3)] hover:shadow-[0_0_30px_rgba(244,63,94,0.5)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all cursor-pointer group"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Submitting...</span>
               </>
             ) : (
               <>
                 <span>Submit Report</span>
-                <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </>
             )}
           </button>
