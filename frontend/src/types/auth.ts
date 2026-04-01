@@ -1,4 +1,5 @@
-// -------- REQUEST TYPES --------
+import { User as UserData } from "./user";
+
 export type SignupPayload = {
   name: string;
   email: string;
@@ -15,12 +16,7 @@ export type GooglePayload = {
 };
 
 // -------- USER TYPE --------
-export type User = {
-  _id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-};
+export type User = UserData;
 
 // -------- RESPONSE TYPES --------
 export type AuthResponse = {

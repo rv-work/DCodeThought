@@ -1,0 +1,24 @@
+import api from "./axios";
+
+export interface HeatmapData {
+  date: string; // "YYYY-MM-DD"
+  count: number;
+}
+
+export interface ActivityResponse {
+  success: boolean;
+  heatmap: HeatmapData[];
+}
+
+export const getMyHeatmap = async (): Promise<ActivityResponse> => {
+  const res = await api.get("/api/activity/me/heatmap");
+  return res.data;
+};
+
+// Phase 3 me jab public profiles banayenge tab ye kaam aayega
+export const getUserHeatmap = async (
+  userId: string,
+): Promise<ActivityResponse> => {
+  const res = await api.get(`/api/activity/${userId}/heatmap`);
+  return res.data;
+};

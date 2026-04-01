@@ -1,42 +1,42 @@
 "use client";
 
-import { BrainCircuit, Lightbulb, CalendarCheck, Code2, Trophy, Users, ArrowRight } from "lucide-react";
+import { BrainCircuit, Medal, Flame, Trophy, Tag, Zap, ArrowRight } from "lucide-react";
 
 const FEATURES = [
   {
-    title: "Thought-First Explanations",
-    desc: "We explain the 'Why' before the 'How'. Understand the logic and intuition before writing a single line of code.",
-    icon: BrainCircuit,
+    title: "The 'Best Thinker' Tags",
+    desc: "Earn reputation through our 3-tier community tagging system: Helpful, Simplest, and Creative.",
+    icon: Tag,
     gradient: "from-blue-500 to-indigo-500"
   },
   {
-    title: "Hints-Driven Learning",
-    desc: "Think step-by-step with guided hints, exactly like a real technical interview environment.",
-    icon: Lightbulb,
-    gradient: "from-yellow-500 to-orange-500"
+    title: "Gamified Streaks & Heatmaps",
+    desc: "Build consistency with GitHub-style activity heatmaps and unlock progressive badges from 30 to 365 days.",
+    icon: Flame,
+    gradient: "from-orange-500 to-red-500"
   },
   {
-    title: "Multi-Language Code",
-    desc: "Complete, optimized solutions provided in C++, Java, and Python so you can learn in your preferred stack.",
-    icon: Code2,
+    title: "Multi-Tier Leaderboards",
+    desc: "Compete Globally, dominate your College-wide leaderboard, or challenge your Friends in private circles.",
+    icon: Trophy,
     gradient: "from-purple-500 to-pink-500"
   },
   {
-    title: "Daily POTD Discipline",
-    desc: "Consistency beats talent. One deeply explained problem every single day.",
-    icon: CalendarCheck,
+    title: "Thought-First Explanations",
+    desc: "Understand the 'Why' before the 'How'. Deep intuition building followed by multi-language solutions.",
+    icon: BrainCircuit,
     gradient: "from-emerald-400 to-teal-500"
   },
   {
-    title: "Contests & Practice",
-    desc: "Organized contest sets for effective pattern recognition and rapid revision.",
-    icon: Trophy,
-    gradient: "from-rose-400 to-red-500"
+    title: "Blazing Fast Feeds",
+    desc: "Powered by Upstash Redis caching, experience zero-lag problem discovery even during peak traffic.",
+    icon: Zap,
+    gradient: "from-yellow-400 to-orange-500"
   },
   {
-    title: "Community Requests",
-    desc: "Stuck on a problem? Request it. Popular requests get prioritized, detailed explanations.",
-    icon: Users,
+    title: "Peer-Reviewed Solutions",
+    desc: "A centralized hub where official solutions meet community brilliance. Discuss, upvote, and learn.",
+    icon: Medal,
     gradient: "from-fuchsia-500 to-purple-600"
   },
 ];
@@ -54,10 +54,10 @@ export default function Features() {
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Everything You Need to Excel
+            Engineered for Top Problem Solvers
           </h2>
           <p className="text-muted text-lg max-w-2xl mx-auto">
-            A platform engineered to build deep problem-solving intuition across multiple programming languages.
+            Not just another coding site. A fully gamified, community-driven platform built to accelerate your algorithmic journey.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default function Features() {
           {FEATURES.map((feature) => {
             const Icon = feature.icon;
             return (
-              <div key={feature.title} className="group relative rounded-3xl bg-background-secondary/50 backdrop-blur-xl border border-border-subtle p-8 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500">
+              <div key={feature.title} className="group cursor-pointer relative rounded-3xl bg-background-secondary/50 backdrop-blur-xl border border-border-subtle p-8 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500">
                 <div className={`absolute inset-0 rounded-3xl bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
                 <div className="relative mb-6">
                   <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-linear-to-br ${feature.gradient} text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>

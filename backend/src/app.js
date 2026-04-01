@@ -14,6 +14,11 @@ import commentRoutes from "./routes/comment.routes.js";
 import homeRoutes from "./routes/home.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import requestRoutes from "./routes/request.routes.js";
+import communitySolutionRoutes from "./routes/communitySolution.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
+import leaderboardRoutes from "./routes/leaderboard.routes.js";
+import feedRoutes from "./routes/feed.routes.js";
+
 
 
 
@@ -44,6 +49,10 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/community-solutions", communitySolutionRoutes);
+app.use("/api/activity", activityRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/feed", feedRoutes);
 
 // Health check
 app.get("/", (req, res) => {

@@ -22,6 +22,13 @@ const sendToken = (user, res) => {
   });
 };
 
+
+const generateDefaultUsername = (name) => {
+  const baseName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const randomNum = Math.floor(1000 + Math.random() * 9000); // 4 digit random number
+  return `${baseName}${randomNum}`;
+};
+
 // ---------------------- EMAIL SIGNUP ----------------------
 export const emailSignup = async (req, res) => {
   try {
@@ -44,6 +51,7 @@ export const emailSignup = async (req, res) => {
       name,
       email,
       password: hashed,
+      username: generateDefaultUsername(name)
     });
 
     return sendToken(user, res);
@@ -111,6 +119,7 @@ export const googleLogin = async (req, res) => {
         name,
         email,
         googleId,
+        username: generateDefaultUsername(name)
       });
     }
 

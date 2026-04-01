@@ -1,21 +1,21 @@
 import type { PublicProblem } from "./problem";
 import type { RequestType } from "./request";
+import type { User } from "./auth"; // Master Type Import kiya
+import type { HeatmapData } from "@/api/activity.api";
+import type { CommunitySolutionData } from "./communitySolution";
 
-export type UserProfile = {
-  _id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-  dateOfJoining: string;
-};
+// Ab UserProfile aur AdminUser dono Master User ke hi roop hain!
+export type UserProfile = User;
+export type AdminUser = User;
 
-export type RecentView = {
+// Baaki sab strictly typed waisa hi rahega:
+export interface RecentView {
   problemId: PublicProblem;
   viewedAt: string;
   difficulty: "Easy" | "Medium" | "Hard";
-};
+}
 
-export type MyReport = {
+export interface MyReport {
   _id: string;
   title: string;
   resolved: boolean;
@@ -24,13 +24,42 @@ export type MyReport = {
     slug: string;
   };
   createdAt: string;
-};
+}
 
-export type MyRequest = {
+export interface MyRequest {
   _id: string;
   type: RequestType;
   title: string;
   votes: { userId: string }[];
   completed: boolean;
   createdAt: string;
-};
+}
+
+export interface PopulatedProblemRef {
+  _id: string;
+  title: string;
+  slug: string;
+  difficulty: string;
+  type: string;
+}
+
+export interface TopSolution extends Omit<CommunitySolutionData, "problemId"> {
+  problemId: PopulatedProblemRef;
+}
+
+export interface PublicProfileResponse {
+  success: boolean;
+  user: UserProfile; // Jo ki actually Master User hai
+  heatmap: HeatmapData[];
+  topSolutions: TopSolution[];
+}
+
+export interface CompareUser extends User {
+  problemsSolved: number;
+  friendsCount: number;
+}
+
+export interface CompareResponse {
+  success: boolean;
+  users: CompareUser[];
+}

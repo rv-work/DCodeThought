@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,11 +9,13 @@ import {
   getMyRequests,
   getMyRecentProblems,
 } from "@/api/profile.api";
+import { getMyHeatmap, type HeatmapData } from "@/api/activity.api"; // NEW IMPORT
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import RecentProblems from "@/components/profile/RecentProblems";
 import MyRequests from "@/components/profile/MyRequests";
 import MyReports from "@/components/profile/MyReports";
+import ActivityHeatmap from "@/components/profile/ActivityHeatmap"; // NEW IMPORT
 
 import type {
   UserProfile,
@@ -29,22 +32,26 @@ export default function ProfilePage() {
   const [reports, setReports] = useState<MyReport[]>([]);
   const [requests, setRequests] = useState<MyRequest[]>([]);
   const [recent, setRecent] = useState<RecentView[]>([]);
+  const [heatmap, setHeatmap] = useState<HeatmapData[]>([]); // NEW STATE
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [p, r, req, rec] = await Promise.all([
+        // Fetching Heatmap parallelly with other data for speed
+        const [p, r, req, rec, h] = await Promise.all([
           getProfile(),
           getMyReports(),
           getMyRequests(),
           getMyRecentProblems(),
+          getMyHeatmap(), // NEW API CALL
         ]);
 
         setProfile(p.user);
         setReports(r.reports);
         setRequests(req.requests);
         setRecent(rec.recent);
+        setHeatmap(h.heatmap); // SETTING HEATMAP DATA
       } catch (err) {
         toast.error(parseError(err));
       } finally {
@@ -119,8 +126,13 @@ export default function ProfilePage() {
             <ProfileHeader user={profile} />
           </div>
 
+          {/* NEW: Heatmap Consistency Graph */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+            <ActivityHeatmap data={heatmap} />
+          </div>
+
           {/* High-Level Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
 
             {/* Stat Card 1 */}
             <div className="relative rounded-4xl bg-background-secondary/60 backdrop-blur-md border border-blue-500/20 p-8 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
@@ -171,16 +183,16 @@ export default function ProfilePage() {
 
           {/* Activity Sections Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+            <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
               <RecentProblems recent={recent} />
             </div>
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+            <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
               <MyRequests requests={requests} />
             </div>
           </div>
 
           {/* Full Width Section */}
-          <div className="animate-fade-in-up pb-12" style={{ animationDelay: "0.4s" }}>
+          <div className="animate-fade-in-up pb-12" style={{ animationDelay: "0.5s" }}>
             <MyReports reports={reports} />
           </div>
 

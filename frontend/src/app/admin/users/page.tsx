@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getAdminUsers } from "@/api/admin.user.api";
-import type { AdminUser } from "@/types/user";
+import type { User } from "@/types/user";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminTable from "@/components/admin/AdminTable";
 import AdminLoading from "@/components/admin/AdminLoading";
@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

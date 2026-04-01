@@ -9,6 +9,20 @@
 @import "highlight.js/styles/github-dark.css";
 
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+
 
 /* --------------------------------------------- */
 /*                BASE THEME VARIABLES           */
@@ -22,11 +36,11 @@
   /* Text */
   --foreground: #0f172a;
   --foreground-muted: #475569;
-  --subtle: #64748b; /* ⭐ NEW */
+  --subtle: #64748b; 
 
   /* Borders */
   --border: #e2e8f0;
-  --border-subtle: #cbd5e1; /* ⭐ NEW */
+  --border-subtle: #cbd5e1; 
 
   /* Accent */
   --accent: #2563eb;
@@ -45,10 +59,10 @@
 
   --foreground: #e5e7eb;
   --foreground-muted: #9ca3af;
-  --subtle: #94a3b8; /* ⭐ NEW */
+  --subtle: #94a3b8; 
 
   --border: #1f2933;
-  --border-subtle: #334155; /* ⭐ NEW */
+  --border-subtle: #334155; 
 
   --accent: #3b82f6;
 }
