@@ -80,7 +80,7 @@ export default function CommentList({ slug }: Props) {
           </div>
         )}
 
-        {/* Comments List */}
+        {/* Comments List with Scroll Logic */}
         {loading ? (
           <div className="space-y-6">
             {[1, 2, 3].map((i) => (
@@ -91,7 +91,8 @@ export default function CommentList({ slug }: Props) {
             ))}
           </div>
         ) : comments.length > 0 ? (
-          <div className="space-y-6">
+          /* FIX: Added max-height and overflow-y-auto to stop screen expansion */
+          <div className="max-h-150 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
             {comments.map((c) => (
               <CommentItem key={c._id} comment={c} isLoggedIn={!!user} />
             ))}

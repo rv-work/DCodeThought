@@ -21,7 +21,11 @@ export default function SolutionSection({ solution }: { solution: Solution }) {
             </div>
             <h2 className="text-2xl font-extrabold text-foreground">Guided Hints</h2>
           </div>
-          <HintsSection hints={solution.hints} />
+
+          {/* Scrollable Wrapper for Hints */}
+          <div className="max-h-112.5 overflow-y-auto pr-2 custom-scrollbar">
+            <HintsSection hints={solution.hints} />
+          </div>
         </div>
       )}
 
@@ -48,8 +52,12 @@ export default function SolutionSection({ solution }: { solution: Solution }) {
             </div>
             <h2 className="text-2xl font-extrabold text-foreground">Optimal Code</h2>
           </div>
-          <div className="rounded-2xl overflow-hidden border border-border-subtle shadow-2xl bg-[#0d1117]">
-            <CodeTabs code={codeObj} />
+
+          {/* Yahan height limit add ki gayi hai */}
+          <div className="rounded-2xl border border-border-subtle shadow-2xl bg-[#0d1117] overflow-hidden">
+            <div className="max-h-150 overflow-y-auto custom-scrollbar">
+              <CodeTabs code={codeObj} />
+            </div>
           </div>
         </div>
       )}

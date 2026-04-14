@@ -188,8 +188,8 @@ export default function ProblemDetailPage() {
                   <button
                     onClick={() => setActiveTab("official")}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === "official"
-                        ? "bg-purple-500 text-white shadow-md shadow-purple-500/25"
-                        : "text-muted hover:text-foreground hover:bg-background/50"
+                      ? "bg-purple-500 text-white shadow-md shadow-purple-500/25"
+                      : "text-muted hover:text-foreground hover:bg-background/50"
                       }`}
                   >
                     <Layers className="w-4 h-4" /> Official Solution
@@ -198,30 +198,38 @@ export default function ProblemDetailPage() {
                   <button
                     onClick={() => setActiveTab("community")}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === "community"
-                        ? "bg-blue-500 text-white shadow-md shadow-blue-500/25"
-                        : "text-muted hover:text-foreground hover:bg-background/50"
+                      ? "bg-blue-500 text-white shadow-md shadow-blue-500/25"
+                      : "text-muted hover:text-foreground hover:bg-background/50"
                       }`}
                   >
                     <Users className="w-4 h-4" /> Community Approaches
                   </button>
                 </div>
 
-                {/* CONDITIONAL RENDERING BASED ON TAB */}
                 {activeTab === "official" ? (
-                  // DCodeThought Official Solution
-                  !solution ? (
+                  loading ? (
+                    /* 1. Jab tak API fetch ho raha hai - Loading State */
                     <div className="flex flex-col items-center justify-center h-125 text-muted font-medium bg-background-secondary/20 backdrop-blur-2xl border border-border-subtle p-10 rounded-[2.5rem] text-center shadow-2xl">
                       <div className="w-20 h-20 mb-6 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                         <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
                       </div>
-                      <h3 className="text-2xl font-bold text-foreground mb-2">Compiling Solution...</h3>
-                      <p>The solution has not been published yet. Check back soon!</p>
+                      <h3 className="text-2xl font-bold text-foreground mb-2">Fetching Solution...</h3>
+                      <p>Please wait while we retrieve the official guide.</p>
+                    </div>
+                  ) : !solution ? (
+                    /* 2. Jab Loading khatam ho gayi aur solution nahi mila - Not Found State */
+                    <div className="flex flex-col items-center justify-center h-125 text-muted font-medium bg-background-secondary/20 backdrop-blur-2xl border border-border-subtle p-10 rounded-[2.5rem] text-center shadow-2xl">
+                      <div className="w-20 h-20 mb-6 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                        <Layers className="w-10 h-10 text-amber-500" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground mb-2">Not Uploaded Yet</h3>
+                      <p>The official solution for this problem hasn&apos;t been published. <br /> Check back later or explore community approaches!</p>
                     </div>
                   ) : (
+                    /* 3. Jab solution mil gaya - Success State */
                     <SolutionSection solution={solution} />
                   )
                 ) : (
-                  // Naya Community System
                   <CommunitySolutionsTab problemId={problem._id} />
                 )}
               </div>
