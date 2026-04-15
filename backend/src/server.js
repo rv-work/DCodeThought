@@ -1,6 +1,6 @@
 import app from "./app.js";
 import connectDB from "./config/db.js";
-import { startCronJobs } from "./cron/StreakCron.js";
+import { startCronJobs } from "./cron/streakCron.js";
 
 const PORT = process.env.PORT || 5100;
 
