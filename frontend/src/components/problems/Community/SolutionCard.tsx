@@ -17,22 +17,39 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
 
   // Local state for optimistic UI updates
   const [tagCounts, setTagCounts] = useState(solution.tagCounts);
+
+  // Safely check if the logged-in user has already tagged this solution
   const [hasTagged, setHasTagged] = useState(
-    solution.taggedBy.some((t) => t.userId === user?._id)
+    user ? solution.taggedBy.some((t) => t.userId === user._id) : false
   );
+
   const [isTagging, setIsTagging] = useState(false);
 
   const handleTag = async (type: "helpful" | "simplest" | "creative") => {
-    if (!user) return toast.error("Please login to tag solutions!");
-    if (solution.userId._id === user._id) return toast.error("You can't tag your own solution!");
-    if (hasTagged) return toast.error("You have already tagged this solution.");
+    // 1. Agar user logged in nahi hai, to react block karo aur login ke liye bolo
+    if (!user) {
+      return toast.error("Please log in to react to solutions!", {
+        icon: "🔒",
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+      });
+    }
+
+    // 2. Khud ke solution par react nahi kar sakte
+    if (solution.userId?._id === user._id) {
+      return toast.error("You can't tag your own solution!");
+    }
+
+    // 3. Ek baar tag kar diya to dobara nahi kar sakte
+    if (hasTagged) {
+      return toast.error("You have already tagged this solution.");
+    }
 
     setIsTagging(true);
     try {
       const res = await tagCommunitySolution(solution._id, { tagType: type });
       setTagCounts(res.tagCounts);
       setHasTagged(true);
-      toast.success(res.message);
+      toast.success(`Successfully tagged as ${type}!`);
     } catch (err) {
       toast.error(parseError(err));
     } finally {
@@ -48,12 +65,11 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
       {/* Header: Author Info */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
+          <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
             {solution.userId?.name ? solution.userId.name.charAt(0).toUpperCase() : "?"}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              {/* 👇 AND HERE 👇 */}
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold text-foreground">{solution.userId?.name || "Unknown User"}</h3>
               {solution.userId?.badges?.includes("Top_Thinker") && (
                 <span className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
@@ -61,11 +77,11 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted flex items-center gap-2 mt-1">
-              {solution.userId.college && (
+            <p className="text-xs text-muted flex items-center gap-2 mt-1 flex-wrap">
+              {solution.userId?.college && (
                 <span className="flex items-center gap-1"><User className="w-3 h-3" /> {solution.userId.college}</span>
               )}
-              <span>•</span>
+              {solution.userId?.college && <span>•</span>}
               <span>{new Date(solution.createdAt).toLocaleDateString()}</span>
             </p>
           </div>
@@ -103,7 +119,9 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         <button
           onClick={() => handleTag("helpful")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:-translate-y-0.5"
             } bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20`}
         >
           <ThumbsUp className="w-4 h-4" /> Helpful ({tagCounts.helpful})
@@ -112,7 +130,9 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         <button
           onClick={() => handleTag("simplest")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:-translate-y-0.5"
             } bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20`}
         >
           <Lightbulb className="w-4 h-4" /> Simplest ({tagCounts.simplest})
@@ -121,7 +141,9 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         <button
           onClick={() => handleTag("creative")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:-translate-y-0.5"
             } bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20`}
         >
           <Sparkles className="w-4 h-4" /> Creative ({tagCounts.creative})

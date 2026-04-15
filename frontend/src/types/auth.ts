@@ -21,7 +21,7 @@ export type User = UserData;
 // -------- RESPONSE TYPES --------
 export type AuthResponse = {
   success: boolean;
-  user: User;
+  user: UserData;
 };
 
 export type LogoutResponse = {
