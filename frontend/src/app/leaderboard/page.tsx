@@ -4,9 +4,13 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/navbar/Navbar";
-import { getLeaderboardData, getFriendsLeaderboardData } from "@/api/leaderboard.api";
+import { getLeaderboardData, getFriendsLeaderboardData, SearchUserResult, searchUsers } from "@/api/leaderboard.api";
+
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, Flame, BrainCircuit, GraduationCap, Medal, Rocket, Target, Sparkles, Users } from "lucide-react";
+import {
+  Trophy, Flame, BrainCircuit, GraduationCap, Medal, Rocket,
+  Target, Sparkles, Users, Search, UserPlus, UserMinus, X
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 import type {
@@ -17,6 +21,7 @@ import type {
   TimeFilter,
   StreakType
 } from "@/types/leaderboard";
+import { toggleFriendStatus } from "@/api/profile.api";
 
 const isUserEntry = (entry: UserLeaderboardEntry | CollegeLeaderboardEntry): entry is UserLeaderboardEntry => {
   return (entry as UserLeaderboardEntry).username !== undefined;
@@ -28,7 +33,7 @@ const isCollegeEntry = (entry: UserLeaderboardEntry | CollegeLeaderboardEntry): 
 function LeaderboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user: currentUser } = useAuth(); // Hook for logged-in user
+  const { user: currentUser } = useAuth();
 
   const urlTab = (searchParams.get("tab") as LeaderboardTab) || "streak";
 
@@ -38,13 +43,19 @@ function LeaderboardContent() {
   const [streakType, setStreakType] = useState<StreakType>("general");
   const [challengeDays, setChallengeDays] = useState<number>(100);
 
-  // Pagination states
+  // Pagination & Data states
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-
   const [data, setData] = useState<(UserLeaderboardEntry | CollegeLeaderboardEntry)[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0); // Used to manually refresh the board
+
+  // Search Modal States
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchUserResult[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   // Sync state with URL
   useEffect(() => {
@@ -57,6 +68,7 @@ function LeaderboardContent() {
     setPage(1);
   }, [activeTab, time, streakType, challengeDays]);
 
+  // Fetch Leaderboard Logic
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
@@ -65,7 +77,6 @@ function LeaderboardContent() {
 
         let res: LeaderboardResponse;
 
-        // Logic for Friends Leaderboard vs Global
         if (activeTab === "friends") {
           if (!currentUser) {
             toast.error("Please login to view your friends leaderboard.");
@@ -87,7 +98,7 @@ function LeaderboardContent() {
         }
         setHasMore(res.hasMore);
 
-      } catch (err) {
+      } catch (err: unknown) {
         toast.error(parseError(err));
       } finally {
         setLoading(false);
@@ -95,11 +106,47 @@ function LeaderboardContent() {
       }
     };
     fetchLeaderboard();
-  }, [activeTab, time, streakType, challengeDays, page, currentUser]);
+  }, [activeTab, time, streakType, challengeDays, page, currentUser, refreshTrigger]);
+
+  // Debounced Search Logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        setIsSearching(true);
+        searchUsers(searchQuery)
+          .then((res) => setSearchResults(res.users))
+          .catch((err: unknown) => toast.error(parseError(err)))
+          .finally(() => setIsSearching(false));
+      } else {
+        setSearchResults([]);
+      }
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleTabChange = (tab: LeaderboardTab) => {
     setActiveTab(tab);
     router.push(`/leaderboard?tab=${tab}`, { scroll: false });
+  };
+
+  const handleToggleFriend = async (username: string) => {
+    try {
+      const res = await toggleFriendStatus(username);
+      toast.success(res.message);
+
+      // 1. Update the search results to reflect the new button state instantly
+      setSearchResults((prev) =>
+        prev.map((u) => (u.username === username ? { ...u, isFriend: res.isFriend } : u))
+      );
+
+      // 2. If we are on the friends tab, refresh the leaderboard behind the modal
+      if (activeTab === "friends") {
+        setPage(1);
+        setRefreshTrigger((prev) => prev + 1);
+      }
+    } catch (err: unknown) {
+      toast.error(parseError(err));
+    }
   };
 
   // Safe renderer for score
@@ -108,7 +155,7 @@ function LeaderboardContent() {
     if (activeTab === "rising") return `${(entry as UserLeaderboardEntry).recentSolvedCount} Solved`;
     if (activeTab === "thinker") return `${(entry as UserLeaderboardEntry).periodScore || (entry as UserLeaderboardEntry).reputation?.totalThinkerScore || 0} Rep`;
     if (activeTab === "challenge" || activeTab === "newly_joined") return `${(entry as UserLeaderboardEntry).challenge?.progress || 0}/${(entry as UserLeaderboardEntry).challenge?.activeDays} Days`;
-    if (activeTab === "streak" || activeTab === "friends") { // Friends tab ranks by general streak
+    if (activeTab === "streak" || activeTab === "friends") {
       if (streakType === "potd" && activeTab !== "friends") return `${(entry as UserLeaderboardEntry).streaks?.maxPotd || 0} Days`;
       if (streakType === "contest" && activeTab !== "friends") return `${(entry as UserLeaderboardEntry).streaks?.maxContest || 0} Days`;
       return `${(entry as UserLeaderboardEntry).streaks?.maxGeneral || 0} Days`;
@@ -141,40 +188,51 @@ function LeaderboardContent() {
         <button onClick={() => handleTabChange("college")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "college" ? "bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><GraduationCap className="w-4 h-4" /> Colleges</button>
       </div>
 
-      {/* SUB FILTERS */}
-      <div className="flex justify-center mb-16 h-10">
-        {activeTab === "streak" && (
-          <div className="flex gap-2 animate-fade-in">
-            {["general", "potd", "contest"].map((t) => (
-              <button key={t} onClick={() => setStreakType(t as StreakType)} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${streakType === t ? "bg-orange-500/10 border-orange-500 text-orange-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
-                {t} Streak
-              </button>
-            ))}
-          </div>
-        )}
-        {activeTab === "thinker" && (
-          <div className="flex gap-2 animate-fade-in">
-            {[{ v: "all_time", l: "All Time" }, { v: "this_month", l: "This Month" }, { v: "this_week", l: "This Week" }].map((t) => (
-              <button key={t.v} onClick={() => setTime(t.v as TimeFilter)} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${time === t.v ? "bg-purple-500/10 border-purple-500 text-purple-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
-                {t.l}
-              </button>
-            ))}
-          </div>
-        )}
-        {(activeTab === "challenge" || activeTab === "newly_joined") && (
-          <div className="flex gap-2 animate-fade-in">
-            <button onClick={() => handleTabChange("newly_joined")} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "newly_joined" ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
-              <Sparkles className="w-3 h-3" /> Newly Joined
+      {/* SUB FILTERS & FRIEND ACTIONS */}
+      <div className="flex flex-col items-center justify-center mb-16 gap-4">
+        <div className="flex justify-center h-10">
+          {activeTab === "friends" && currentUser && (
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold bg-indigo-500/10 border border-indigo-500 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm"
+            >
+              <Search className="w-4 h-4" /> Find Friends
             </button>
-            {[30, 50, 100, 200, 365].map((d) => (
-              <button key={d} onClick={() => { handleTabChange("challenge"); setChallengeDays(d); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "challenge" && challengeDays === d ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
-                {d} Days
+          )}
+          {activeTab === "streak" && (
+            <div className="flex gap-2 animate-fade-in">
+              {["general", "potd", "contest"].map((t) => (
+                <button key={t} onClick={() => setStreakType(t as StreakType)} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${streakType === t ? "bg-orange-500/10 border-orange-500 text-orange-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+                  {t} Streak
+                </button>
+              ))}
+            </div>
+          )}
+          {activeTab === "thinker" && (
+            <div className="flex gap-2 animate-fade-in">
+              {[{ v: "all_time", l: "All Time" }, { v: "this_month", l: "This Month" }, { v: "this_week", l: "This Week" }].map((t) => (
+                <button key={t.v} onClick={() => setTime(t.v as TimeFilter)} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${time === t.v ? "bg-purple-500/10 border-purple-500 text-purple-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+                  {t.l}
+                </button>
+              ))}
+            </div>
+          )}
+          {(activeTab === "challenge" || activeTab === "newly_joined") && (
+            <div className="flex gap-2 animate-fade-in">
+              <button onClick={() => handleTabChange("newly_joined")} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "newly_joined" ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+                <Sparkles className="w-3 h-3" /> Newly Joined
               </button>
-            ))}
-          </div>
-        )}
+              {[30, 50, 100, 200, 365].map((d) => (
+                <button key={d} onClick={() => { handleTabChange("challenge"); setChallengeDays(d); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "challenge" && challengeDays === d ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+                  {d} Days
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* LEADERBOARD DATA */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
@@ -187,9 +245,12 @@ function LeaderboardContent() {
               <Users className="w-16 h-16 text-indigo-500/50 mx-auto mb-4 opacity-80" />
               <h3 className="text-2xl font-bold text-foreground mb-2">It&apos;s quiet here...</h3>
               <p className="text-muted mb-6">You haven&apos;t added any friends yet. Add friends to compete with them!</p>
-              <Link href="/problems" className="px-6 py-2.5 rounded-xl bg-indigo-500 text-white font-bold hover:scale-[1.02] transition-all">
-                Find Coders
-              </Link>
+              <button
+                onClick={() => setIsSearchModalOpen(true)}
+                className="px-6 py-2.5 rounded-xl bg-indigo-500 text-white font-bold hover:scale-[1.02] transition-all flex items-center gap-2 mx-auto"
+              >
+                <Search className="w-4 h-4" /> Find Coders
+              </button>
             </>
           ) : (
             <>
@@ -292,6 +353,93 @@ function LeaderboardContent() {
           )}
         </>
       )}
+
+      {/* SEARCH MODAL OVERLAY */}
+      {isSearchModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            if (e.target === e.currentTarget) setIsSearchModalOpen(false);
+          }}
+        >
+          <div className="bg-background border border-border-subtle rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up flex flex-col max-h-[80vh]">
+
+            {/* Search Header */}
+            <div className="p-5 border-b border-border-subtle flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search by name or username..."
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  className="w-full bg-background-secondary border border-border-subtle rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 transition-colors"
+                  autoFocus
+                />
+              </div>
+              <button
+                onClick={() => setIsSearchModalOpen(false)}
+                className="p-2 text-muted hover:text-foreground hover:bg-background-secondary rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Results */}
+            <div className="overflow-y-auto p-2 flex-1">
+              {isSearching ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-2" />
+                  <p className="text-xs text-muted font-medium">Searching coders...</p>
+                </div>
+              ) : searchQuery.trim() === "" ? (
+                <div className="text-center py-10 px-4">
+                  <Users className="w-10 h-10 text-muted mx-auto mb-3 opacity-30" />
+                  <p className="text-sm text-muted">Type a name or username to find friends to compete with.</p>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center py-10 px-4">
+                  <p className="text-sm text-muted">No users found matching &quot;{searchQuery}&quot;</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {searchResults.map((searchUser) => (
+                    <div key={searchUser._id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-background-secondary/50 transition-colors">
+                      <Link href={`/u/${searchUser.username}`} onClick={() => setIsSearchModalOpen(false)} className="flex items-center gap-3 flex-1 group">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 font-bold border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                          {searchUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                            {searchUser.name}
+                            {searchUser.badges?.includes("Top_Thinker") && <Medal className="w-3 h-3 text-amber-500" />}
+                          </div>
+                          <div className="text-xs text-muted">@{searchUser.username}</div>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={() => handleToggleFriend(searchUser.username)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ml-2 ${searchUser.isFriend
+                          ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+                          : "bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white border border-indigo-500/20"
+                          }`}
+                      >
+                        {searchUser.isFriend ? (
+                          <><UserMinus className="w-3.5 h-3.5" /> Remove</>
+                        ) : (
+                          <><UserPlus className="w-3.5 h-3.5" /> Add</>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -304,7 +452,7 @@ export default function LeaderboardPage() {
         <div className="absolute top-[-10%] left-1/4 w-150 h-150 bg-orange-600/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute top-[20%] right-[-10%] w-125 h-125 bg-purple-600/10 rounded-full blur-[150px] pointer-events-none" />
 
-        <div className="text-center space-y-4 animate-fade-in-up mb-12 relative z-10">
+        <div className="text-center space-y-4 animate-fade-in-up mb-12 relative z-10 px-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-sm font-bold uppercase tracking-wider">
             <Trophy className="w-4 h-4" /> Global Rankings
           </div>

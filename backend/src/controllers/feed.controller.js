@@ -1,15 +1,13 @@
 import FeedPost from "../models/FeedPost.js";
+import { updateStreakAndLogActivity } from "../utils/streakManager.js"; 
 
-// 1. Create a new Feed Post (Supports Multiple Images)
 export const createPost = async (req, res) => {
   try {
     const { questionNumber, title, leetcodeLink, content, tags } = req.body;
     const userId = req.user._id;
 
-    // Get image URLs from Cloudinary via Multer
     const imageUrls = req.files ? req.files.map(file => file.path) : [];
 
-    // Parse tags if sent as string (FormData sends arrays as comma-separated strings sometimes)
     let parsedTags = [];
     if (tags) {
       parsedTags = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
@@ -26,6 +24,8 @@ export const createPost = async (req, res) => {
     });
 
     await newPost.populate("userId", "name username college badges");
+
+    await updateStreakAndLogActivity(userId, null, "feed");
 
     res.status(201).json({ success: true, message: "Post created successfully!", post: newPost });
   } catch (error) {

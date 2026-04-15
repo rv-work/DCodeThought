@@ -2,37 +2,40 @@ import Problem from "../models/Problem.js";
 import User from "../models/User.js";
 import { cacheGet, cacheSet } from "../services/cache.service.js";
 
-
-
 export const addRecentView = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    // find the problem from slug
+    // 1. Find the problem to get its ID
     const problem = await Problem.findOne({ slug }).select("_id");
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
 
-    // remove if same problem exists in recent
-    await User.updateOne(
-      { _id: req.user._id },
-      { $pull: { recentlyViewed: { problemId: problem._id } } }
+    // 2. Fetch the user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 3. Remove ANY existing entries of this problem (cleans up previous duplicates too)
+    user.recentlyViewed = user.recentlyViewed.filter(
+      (item) => item.problemId.toString() !== problem._id.toString()
     );
 
-    // insert at top + keep only last 20 entries
-    await User.updateOne(
-      { _id: req.user._id },
-      {
-        $push: {
-          recentlyViewed: {
-            $each: [{ problemId: problem._id, viewedAt: new Date() }],
-            $position: 0, // insert at top
-            $slice: 20,   // keep max last 20
-          },
-        },
-      }
-    );
+    // 4. Add the newly viewed problem to the very top (start of the array)
+    user.recentlyViewed.unshift({
+      problemId: problem._id,
+      viewedAt: new Date(),
+    });
+
+    // 5. Keep only the last 20 entries to save space
+    if (user.recentlyViewed.length > 20) {
+      user.recentlyViewed = user.recentlyViewed.slice(0, 20);
+    }
+
+    // 6. Save the cleaned and updated array
+    await user.save();
 
     res.json({ success: true });
 
@@ -41,6 +44,8 @@ export const addRecentView = async (req, res) => {
     res.status(500).json({ message: "Could not record view" });
   }
 };
+
+
 
 export const getPublicProblems = async (req, res) => {
   try {

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import type { UserProfile } from "@/types/profile";
 import { updateProfileData } from "@/api/profile.api";
-import { Mail, Calendar, Edit2, Check, X, MapPin, Medal } from "lucide-react";
+// 👇 FIX: Added ExternalLink from lucide-react
+import { Mail, Calendar, Edit2, Check, X, MapPin, Medal, ExternalLink } from "lucide-react";
+// 👇 FIX: Imported Link from Next.js
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 
@@ -64,7 +67,21 @@ export default function ProfileHeader({ user: initialUser }: { user: UserProfile
                       </div>
                     )}
                   </h1>
-                  <p className="text-accent font-medium mt-1">@{user.username || "setup_username"}</p>
+
+                  {/* 👇 FIX: Displaying Username and Public Profile Link together */}
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <p className="text-accent font-medium text-lg">@{user.username || "setup_username"}</p>
+
+                    {/* Sirf tabhi dikhega jab user ne username set kar liya ho */}
+                    {user.username && (
+                      <Link
+                        href={`/u/${user.username}`}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] sm:text-xs font-bold uppercase tracking-wider hover:bg-accent/20 hover:-translate-y-0.5 transition-all shadow-sm"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Public View
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
                 <button

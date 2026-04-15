@@ -168,3 +168,41 @@ export const getFriendsLeaderboard = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+
+
+
+export const searchUsersForFriends = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim() === "") {
+      return res.status(200).json({ success: true, users: [] });
+    }
+
+    const regex = new RegExp(q, "i"); // Case-insensitive regex search
+    const me = await User.findById(req.user._id);
+
+    // Find users matching name or username (exclude the current user)
+    const users = await User.find({
+      _id: { $ne: req.user._id },
+      $or: [{ name: regex }, { username: regex }]
+    })
+      .select("_id name username badges")
+      .limit(10);
+
+    // Map the results to include an 'isFriend' boolean
+    const mappedUsers = users.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      username: u.username,
+      badges: u.badges,
+      isFriend: me.friends.includes(u._id)
+    }));
+
+    return res.status(200).json({ success: true, users: mappedUsers });
+  } catch (error) {
+    console.error("Search Users Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

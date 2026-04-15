@@ -27,3 +27,25 @@ export const getFriendsLeaderboardData =
     const res = await api.get("/api/leaderboard/friends");
     return res.data;
   };
+
+export interface SearchUserResult {
+  _id: string;
+  name: string;
+  username: string;
+  badges?: string[];
+  isFriend: boolean;
+}
+
+export interface SearchUsersResponse {
+  success: boolean;
+  users: SearchUserResult[];
+}
+
+export const searchUsers = async (
+  query: string,
+): Promise<SearchUsersResponse> => {
+  const res = await api.get(
+    `/api/leaderboard/friends/search?q=${encodeURIComponent(query)}`,
+  );
+  return res.data;
+};

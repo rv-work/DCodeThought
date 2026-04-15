@@ -5,7 +5,11 @@ import { getProblemSolutions } from "@/api/communitySolution.api";
 import { CommunitySolutionData } from "@/types/communitySolution";
 import SolutionCard from "./SolutionCard";
 import SubmitSolutionForm from "./SubmitSolutionForm";
-import { Users, Medal, ThumbsUp, Lightbulb, Sparkles, Plus, X } from "lucide-react";
+// 👇 FIX: Added Lock icon and Link
+import { Users, Medal, ThumbsUp, Lightbulb, Sparkles, Plus, X, Lock } from "lucide-react";
+import Link from "next/link";
+// 👇 FIX: Added useAuth hook
+import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 
@@ -13,6 +17,9 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
   const [solutions, setSolutions] = useState<CommunitySolutionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubmitForm, setShowSubmitForm] = useState(false);
+
+  // 👇 FIX: Get user from auth
+  const { user } = useAuth();
 
   const fetchSolutions = async () => {
     try {
@@ -37,7 +44,6 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
 
     const remaining = [...solutions];
 
-    // Helper to find max by key and remove from remaining list
     const extractMax = (key: keyof CommunitySolutionData["tagCounts"]) => {
       if (!remaining.length) return null;
       let maxIdx = 0;
@@ -50,7 +56,6 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
         }
       }
 
-      // Only highlight if it has at least 1 vote
       if (maxVal === 0) return null;
 
       const best = remaining[maxIdx];
@@ -58,7 +63,6 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
       return best;
     };
 
-    // Extract in order of importance
     const best = extractMax("totalScore");
     const helpful = extractMax("helpful");
     const simplest = extractMax("simplest");
@@ -91,28 +95,47 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
           </div>
         </div>
 
-        <button
-          onClick={() => setShowSubmitForm(!showSubmitForm)}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all duration-300 shadow-lg ${showSubmitForm
-            ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-            : "bg-foreground text-background hover:scale-[1.02]"
-            }`}
-        >
-          {showSubmitForm ? <><X className="w-4 h-4" /> Cancel</> : <><Plus className="w-4 h-4" /> Share Approach</>}
-        </button>
+        {/* 👇 FIX: Only show the toggle button if the user is logged in */}
+        {user && (
+          <button
+            onClick={() => setShowSubmitForm(!showSubmitForm)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all duration-300 shadow-lg ${showSubmitForm
+              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+              : "bg-foreground text-background hover:scale-[1.02]"
+              }`}
+          >
+            {showSubmitForm ? <><X className="w-4 h-4" /> Cancel</> : <><Plus className="w-4 h-4" /> Share Approach</>}
+          </button>
+        )}
       </div>
 
-      {/* Submit Form Area */}
-      {showSubmitForm && (
-        <div className="animate-fade-in-down">
-          <SubmitSolutionForm
-            problemId={problemId}
-            onSuccess={() => {
-              setShowSubmitForm(false);
-              fetchSolutions(); // Refresh list
-            }}
-          />
+      {/* 👇 FIX: Beautiful Login Banner OR Submit Form */}
+      {!user ? (
+        <div className="p-8 rounded-3xl bg-background border border-border-subtle flex flex-col items-center justify-center text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center mb-3">
+            <Lock className="w-5 h-5 text-indigo-500" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground mb-1">Join the Conversation</h3>
+          <p className="text-muted mb-4">Please log in to share your approach and vote on others&apos; solutions.</p>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-foreground text-background font-bold shadow-lg hover:scale-[1.02] transition-all duration-300"
+          >
+            Go to Login
+          </Link>
         </div>
+      ) : (
+        showSubmitForm && (
+          <div className="animate-fade-in-down">
+            <SubmitSolutionForm
+              problemId={problemId}
+              onSuccess={() => {
+                setShowSubmitForm(false);
+                fetchSolutions();
+              }}
+            />
+          </div>
+        )
       )}
 
       {/* Empty State */}
@@ -120,7 +143,12 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
         <div className="text-center py-20 bg-background-secondary/20 rounded-3xl border border-border-subtle border-dashed">
           <Lightbulb className="w-12 h-12 text-muted mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-bold text-foreground mb-2">Be the first to share!</h3>
-          <p className="text-muted">Explain how you solved this problem and earn the Top Thinker badge.</p>
+          <p className="text-muted">
+            {/* 👇 FIX: Adjusted empty state text based on login status */}
+            {user
+              ? "Explain how you solved this problem and earn the Top Thinker badge."
+              : "Log in to explain how you solved this problem and earn the Top Thinker badge."}
+          </p>
         </div>
       )}
 
