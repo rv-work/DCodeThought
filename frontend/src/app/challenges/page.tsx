@@ -6,8 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { joinUserChallenge } from "@/api/profile.api";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
-import { Shield, Swords, Flame, Crown, Zap, CheckCircle2, Target, ShieldAlert, ArrowUpCircle, Activity } from "lucide-react";
+import { Shield, Swords, Flame, Crown, Zap, CheckCircle2, Target, ShieldAlert, ArrowUpCircle, Activity, PenTool, X } from "lucide-react";
 import { useUISounds } from "@/hooks/useUISounds";
+import { User } from "@/types/user";
 
 const CHALLENGES = [
   {
@@ -70,18 +71,27 @@ const CHALLENGES = [
 export default function ChallengesPage() {
   const { user } = useAuth();
   const { playLevelUp } = useUISounds();
-  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loadingId, setLoadingId] = useState<number | string | null>(null);
+
+  // Custom Challenge Modal States
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState<boolean>(false);
+  const [customDays, setCustomDays] = useState<number>(14);
+  const [customTitle, setCustomTitle] = useState<string>("");
+  const [customDesc, setCustomDesc] = useState<string>("");
 
   const activeDays = user?.challenge?.activeDays || 0;
   const progress = user?.challenge?.progress || 0;
   const progressPercentage = activeDays > 0 ? Math.round((progress / activeDays) * 100) : 0;
 
-  const handleJoin = async (days: number) => {
+  // Retrieve user's custom title/desc if they have one active
+  const activeTitle = (user as User)?.challenge?.title || CHALLENGES.find(c => c.days === activeDays)?.title || `${activeDays} Day Challenge`;
+
+  const handleJoin = async (days: number, title?: string, desc?: string) => {
     if (!user) {
       toast.error("Please login to accept a quest!");
       return;
     }
-    if (activeDays === days) {
+    if (activeDays === days && !title) {
       toast("You are already on this quest!", { icon: "⚔️" });
       return;
     }
@@ -108,15 +118,16 @@ export default function ChallengesPage() {
           <button
             onClick={async () => {
               toast.dismiss(t.id);
-              setLoadingId(days);
+              setLoadingId(title ? "custom" : days);
               try {
-                const res = await joinUserChallenge(days);
+                const res = await joinUserChallenge(days, title, desc);
                 toast.success(res.message);
                 playLevelUp();
+                setIsCustomModalOpen(false);
                 setTimeout(() => {
                   window.location.reload(); // Reload to update user context immediately
                 }, 1500);
-              } catch (error) {
+              } catch (error: unknown) {
                 toast.error(parseError(error));
               } finally {
                 setLoadingId(null);
@@ -129,6 +140,19 @@ export default function ChallengesPage() {
         </div>
       </div>
     ), { duration: 8000, style: { maxWidth: '400px' } });
+  };
+
+  const handleCustomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (customDays < 7 || customDays > 365) {
+      toast.error("Custom quest must be between 7 and 365 days.");
+      return;
+    }
+    if (!customTitle.trim()) {
+      toast.error("Give your quest a legendary name.");
+      return;
+    }
+    handleJoin(customDays, customTitle, customDesc);
   };
 
   return (
@@ -153,11 +177,9 @@ export default function ChallengesPage() {
             </p>
           </div>
 
-          {/* 👇 NEW: LIVE QUEST TRACKER (Only shows if user has an active challenge) 👇 */}
+          {/* LIVE QUEST TRACKER */}
           {activeDays > 0 && (
             <div className="bg-background-secondary/80 backdrop-blur-2xl border-2 border-emerald-500/40 rounded-[2.5rem] p-8 md:p-12 mb-16 shadow-[0_0_50px_rgba(16,185,129,0.15)] relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-
-              {/* Radar Grid Animation Background */}
               <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.05)_1px,transparent_1px)] bg-size-[20px_20px] opacity-50 pointer-events-none" />
 
               <div className="relative z-10 w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-full border-4 border-emerald-500/30 flex items-center justify-center bg-emerald-500/10 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
@@ -170,14 +192,13 @@ export default function ChallengesPage() {
                 </h3>
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
                   <h2 className="text-4xl md:text-5xl font-black text-foreground uppercase tracking-tight">
-                    {CHALLENGES.find(c => c.days === activeDays)?.title || `${activeDays} Day Challenge`}
+                    {activeTitle}
                   </h2>
                   <div className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-500">
                     {progress} <span className="text-lg text-muted font-bold">/ {activeDays} Days</span>
                   </div>
                 </div>
 
-                {/* Big Gamified Progress Bar */}
                 <div className="w-full h-6 bg-black/50 rounded-full overflow-hidden border border-emerald-500/30 p-1 box-content shadow-inner">
                   <div
                     className="h-full rounded-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all duration-1000 relative shadow-[0_0_15px_rgba(16,185,129,0.8)]"
@@ -190,7 +211,6 @@ export default function ChallengesPage() {
               </div>
             </div>
           )}
-          {/* 👆 LIVE QUEST TRACKER END 👆 */}
 
           {/* Rules Section */}
           <div className="bg-background-secondary/40 backdrop-blur-xl border border-border-subtle rounded-4xl p-8 md:p-10 mb-16 shadow-xl max-w-5xl mx-auto">
@@ -226,7 +246,7 @@ export default function ChallengesPage() {
                 </div>
                 <div>
                   <h4 className="text-lg font-black text-foreground mb-1.5 uppercase tracking-wider">Badge Evolution</h4>
-                  <p className="text-sm text-muted font-medium leading-relaxed">Badges are dynamic. Complete 30 days to earn the Novice badge. If you continue and complete 50 days, your smaller badge is <strong>automatically upgraded & replaced</strong> by the higher tier badge.</p>
+                  <p className="text-sm text-muted font-medium leading-relaxed">Badges are dynamic. Complete 30 days to earn the Novice badge. If you continue and pass standard thresholds (50, 100), your smaller badge is <strong>automatically upgraded</strong>.</p>
                 </div>
               </div>
 
@@ -246,7 +266,7 @@ export default function ChallengesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CHALLENGES.map((challenge) => {
               const Icon = challenge.icon;
-              const isActive = activeDays === challenge.days;
+              const isActive = activeDays === challenge.days && !(user as User)?.challenge?.title; // Standard challenge check
 
               return (
                 <div
@@ -287,10 +307,115 @@ export default function ChallengesPage() {
                 </div>
               );
             })}
+
+            {/* Custom Quest Card */}
+            <div
+              className={`relative overflow-hidden rounded-4xl border-2 bg-background-secondary/80 backdrop-blur-xl transition-all duration-500 transform-gpu hover:-translate-y-2 border-indigo-500/30 hover:border-indigo-500 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] flex flex-col cursor-pointer`}
+              onClick={() => setIsCustomModalOpen(true)}
+            >
+              <div className="absolute inset-0 bg-linear-to-b from-indigo-500/20 to-cyan-500/5 opacity-50" />
+
+              <div className="p-8 relative z-10 flex flex-col flex-1 items-center justify-center text-center">
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/50 flex items-center justify-center mb-6 text-indigo-400 group-hover:border-indigo-400 group-hover:text-indigo-300 transition-colors">
+                  <PenTool className="w-8 h-8" />
+                </div>
+                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight mb-2">Forge Your Own</h2>
+                <p className="text-muted font-medium mb-8">Design a custom challenge. Pick your target days, name your quest, and set your own terms.</p>
+                <div className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500 hover:text-white">
+                  Create Custom Quest
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
+
+      {/* Custom Quest Modal Overlay */}
+      {isCustomModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            if (e.target === e.currentTarget) setIsCustomModalOpen(false);
+          }}
+        >
+          <div className="bg-background border-2 border-indigo-500/30 rounded-3xl shadow-[0_0_50px_rgba(99,102,241,0.2)] w-full max-w-lg overflow-hidden animate-fade-in-up">
+
+            {/* Header */}
+            <div className="p-6 border-b border-border-subtle flex items-center justify-between bg-indigo-500/5">
+              <h3 className="text-xl font-black text-foreground flex items-center gap-2 uppercase tracking-widest">
+                <PenTool className="w-5 h-5 text-indigo-500" /> Forge Custom Quest
+              </h3>
+              <button
+                onClick={() => setIsCustomModalOpen(false)}
+                className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCustomSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Quest Title <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g., 75-Hard Data Structures"
+                  value={customTitle}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomTitle(e.target.value)}
+                  className="w-full bg-background-secondary border border-border-subtle rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-indigo-500 transition-colors font-bold"
+                  maxLength={30}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Description</label>
+                <textarea
+                  placeholder="What is your objective for this quest?"
+                  value={customDesc}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomDesc(e.target.value)}
+                  rows={2}
+                  className="w-full bg-background-secondary border border-border-subtle rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                  maxLength={100}
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-widest">Target Days <span className="text-red-500">*</span></label>
+                  <span className="text-xl font-black text-indigo-500">{customDays} Days</span>
+                </div>
+                <input
+                  type="range"
+                  min="7"
+                  max="365"
+                  value={customDays}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomDays(parseInt(e.target.value))}
+                  className="w-full accent-indigo-500 h-2 bg-background-secondary rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] font-bold text-muted mt-2">
+                  <span>7 Days</span>
+                  <span>180 Days</span>
+                  <span>365 Days</span>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loadingId === "custom"}
+                  className="w-full py-3.5 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-lg bg-indigo-500 text-white hover:scale-[1.02] hover:bg-indigo-400 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                >
+                  {loadingId === "custom" ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Forging...</>
+                  ) : "Begin Quest"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Global CSS for the diagonal sliding animation in the bars */}
       <style dangerouslySetInnerHTML={{

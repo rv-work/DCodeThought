@@ -38,6 +38,8 @@ export interface User {
   };
 
   challenge?: {
+    title?: string | null;
+    desc?: string | null;
     activeDays: number | null;
     startDate: string | null;
     progress: number;

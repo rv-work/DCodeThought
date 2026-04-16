@@ -74,9 +74,11 @@ const UserSchema = new mongoose.Schema({
   },
 
   challenge: {
-    activeDays: { type: Number, enum: [30, 50, 100, 200, 365, null], default: null },
+    activeDays: { type: Number, default: null }, // Removed the enum restriction
+    title: { type: String, default: null },      // NEW: Custom title
+    desc: { type: String, default: null },       // NEW: Custom description
     startDate: { type: Date, default: null },
-    progress: { type: Number, default: 0 }, // kitne din complete kiye
+    progress: { type: Number, default: 0 },
   },
 
   reputation: {

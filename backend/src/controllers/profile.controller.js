@@ -236,32 +236,44 @@ export const compareUsers = async (req, res) => {
 
 
 
-
-
-// Join a Coding Challenge
 export const joinChallenge = async (req, res) => {
   try {
-    const { days } = req.body; // 30, 50, 100, 200, 365
-    const validDays = [30, 50, 100, 200, 365];
+    const { days, title, desc } = req.body;
 
-    if (!validDays.includes(days)) {
-      return res.status(400).json({ success: false, message: "Invalid challenge duration." });
+    // Allow any duration between 7 and 365 days for custom quests
+    if (!days || days < 7 || days > 365) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Challenge must be between 7 and 365 days." 
+      });
     }
 
     const user = await User.findById(req.user._id);
 
-    // If user already has an active challenge, they can override it (but progress resets)
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found." 
+      });
+    }
+
+    // If user already has an active challenge, they can override it (progress resets)
+    // Assign custom data or default to basic text for the standard presets
     user.challenge = {
       activeDays: days,
+      title: title || `${days} Day Challenge`,
+      desc: desc || "Committed to daily consistency.",
       startDate: new Date(),
       progress: 0
     };
 
+    // Force Mongoose to recognize the nested object change
+    user.markModified("challenge");
     await user.save();
 
     return res.status(200).json({ 
       success: true, 
-      message: `Epic! You have joined the ${days}-Day Challenge. Let the grind begin!`,
+      message: `Epic! You have accepted: ${user.challenge.title}. Let the grind begin!`,
       challenge: user.challenge
     });
 

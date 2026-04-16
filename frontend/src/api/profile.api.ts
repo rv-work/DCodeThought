@@ -55,7 +55,16 @@ export const getCompareData = async (
   return res.data;
 };
 
-export const joinUserChallenge = async (days: number) => {
-  const res = await api.post("/api/profile/me/challenge", { days });
+// Update the function signature
+export const joinUserChallenge = async (
+  days: number,
+  title?: string,
+  desc?: string,
+) => {
+  const res = await api.post("/api/profile/me/challenge", {
+    days,
+    title,
+    desc,
+  });
   return res.data;
 };
