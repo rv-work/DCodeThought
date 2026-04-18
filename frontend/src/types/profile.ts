@@ -47,11 +47,45 @@ export interface TopSolution extends Omit<CommunitySolutionData, "problemId"> {
   problemId: PopulatedProblemRef;
 }
 
+// 👇 NEW: Strict types for the new stats and activity data
+export interface ProfileStats {
+  totalActivities: number;
+  totalPracticeSolved: number;
+  totalPotdSolved: number;
+  totalContestParticipated: number;
+  totalFeedPosts: number;
+  friendCount: number;
+  joinedDaysAgo: number;
+  profileCompletion: number;
+  currentGeneralStreak: number;
+  maxGeneralStreak: number;
+  currentPotdStreak: number;
+  maxPotdStreak: number;
+  currentContestStreak: number;
+  maxContestStreak: number;
+  helpfulVotes: number;
+  simplestVotes: number;
+  creativeVotes: number;
+  totalThinkerScore: number;
+  badgeCount: number;
+  challengeProgress: number;
+  challengeGoal: number | null;
+}
+
+export interface ActivityLogEntry {
+  _id: string;
+  type: string;
+  dateString: string;
+  createdAt: string;
+}
+
 export interface PublicProfileResponse {
   success: boolean;
   user: UserProfile; // Jo ki actually Master User hai
   heatmap: HeatmapData[];
+  stats: ProfileStats;
   topSolutions: TopSolution[];
+  recentActivity: ActivityLogEntry[];
 }
 
 export interface CompareUser extends User {

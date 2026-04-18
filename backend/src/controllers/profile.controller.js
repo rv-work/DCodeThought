@@ -51,40 +51,176 @@ export const updateProfile = async (req, res) => {
 };
 
 
-
-// 3. Get Public Profile (For /u/[username])
 export const getPublicProfile = async (req, res) => {
   try {
     const { username } = req.params;
-    const user = await User.findOne({ username: username.toLowerCase() }).select(
-      "name username college bio socialLinks badges streaks reputation dateOfJoining challenge"
-    );
 
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    const user = await User.findOne({
+      username: username.toLowerCase(),
+    })
+      .select(`
+        _id
+        name
+        username
+        email
+        college
+        bio
+        socialLinks
+        badges
+        streaks
+        reputation
+        challenge
+        dateOfJoining
+        recentlyViewed
+        friends
+        mentor
+      `)
+      .populate("mentor", "name username")
+      .populate("friends", "name username");
 
-    // Fetch Heatmap Activity
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Heatmap Data
     const heatmapData = await ActivityLog.aggregate([
       { $match: { userId: user._id } },
-      { $group: { _id: "$dateString", count: { $sum: 1 } } },
-      { $project: { date: "$_id", count: 1, _id: 0 } },
-      { $sort: { date: 1 } }
+      {
+        $group: {
+          _id: "$dateString",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          date: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { date: 1 } },
     ]);
 
-    // Fetch Top 3 Solutions
-    const topSolutions = await CommunitySolution.find({ userId: user._id })
+    // Top Solutions
+    const topSolutions = await CommunitySolution.find({
+      userId: user._id,
+    })
       .populate("problemId", "title slug difficulty type")
-      // 👇 FIX: POPULATE USER DETAILS ALSO (name, badges, college are needed by SolutionCard)
-      .populate("userId", "name college badges reputation") 
+      .populate(
+        "userId",
+        "name username college badges reputation"
+      )
       .sort({ "tagCounts.totalScore": -1 })
       .limit(3)
-      .select("-code"); 
+      .select("-code");
 
-    return res.status(200).json({ success: true, user, heatmap: heatmapData, topSolutions });
+    // Total activity stats
+    const totalActivities = await ActivityLog.countDocuments({
+      userId: user._id,
+    });
+
+    const totalPracticeSolved = await ActivityLog.countDocuments({
+      userId: user._id,
+      type: "practice",
+    });
+
+    const totalPotdSolved = await ActivityLog.countDocuments({
+      userId: user._id,
+      type: "potd",
+    });
+
+    const totalContestParticipated = await ActivityLog.countDocuments({
+      userId: user._id,
+      type: "contest",
+    });
+
+    const totalFeedPosts = await ActivityLog.countDocuments({
+      userId: user._id,
+      type: "feed",
+    });
+
+    // Recent activity
+    const recentActivity = await ActivityLog.find({
+      userId: user._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("type dateString createdAt");
+
+    // Joined days ago
+    const joinedDaysAgo = Math.floor(
+      (Date.now() - new Date(user.dateOfJoining).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    // Friend count
+    const friendCount = user.friends?.length || 0;
+
+    // Profile completion score
+    let profileCompletion = 0;
+
+    if (user.name) profileCompletion += 10;
+    if (user.username) profileCompletion += 10;
+    if (user.bio) profileCompletion += 10;
+    if (user.college) profileCompletion += 10;
+    if (user.socialLinks?.github) profileCompletion += 10;
+    if (user.socialLinks?.linkedin) profileCompletion += 10;
+    if (user.socialLinks?.twitter) profileCompletion += 10;
+    if (user.badges?.length > 0) profileCompletion += 10;
+    if (friendCount > 0) profileCompletion += 10;
+    if (user.challenge?.activeDays) profileCompletion += 10;
+
+
+    return res.status(200).json({
+      success: true,
+      user,
+      heatmap: heatmapData,
+      topSolutions,
+
+      stats: {
+        totalActivities,
+        totalPracticeSolved,
+        totalPotdSolved,
+        totalContestParticipated,
+        totalFeedPosts,
+
+        friendCount,
+        joinedDaysAgo,
+        profileCompletion,
+
+        currentGeneralStreak: user.streaks?.currentGeneral || 0,
+        maxGeneralStreak: user.streaks?.maxGeneral || 0,
+
+        currentPotdStreak: user.streaks?.currentPotd || 0,
+        maxPotdStreak: user.streaks?.maxPotd || 0,
+
+        currentContestStreak: user.streaks?.currentContest || 0,
+        maxContestStreak: user.streaks?.maxContest || 0,
+
+        helpfulVotes: user.reputation?.helpful || 0,
+        simplestVotes: user.reputation?.simplest || 0,
+        creativeVotes: user.reputation?.creative || 0,
+        totalThinkerScore: user.reputation?.totalThinkerScore || 0,
+
+        badgeCount: user.badges?.length || 0,
+        challengeProgress: user.challenge?.progress || 0,
+        challengeGoal: user.challenge?.activeDays || null,
+      },
+
+      recentActivity,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Get Public Profile Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
-
 
 export const getMyReports = async (req, res) => {
   try {

@@ -14,24 +14,28 @@ export default function RecentProblems({ recent }: { recent: RecentView[] }) {
   const validRecent = recent.filter((r) => r.problemId);
 
   return (
-    <div className="h-full rounded-4xl bg-background-secondary/40 backdrop-blur-md border border-border-subtle p-8 shadow-sm">
-
+    <div className="rounded-4xl bg-background-secondary/40 backdrop-blur-md border border-border-subtle p-8 shadow-sm h-140 flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-8 shrink-0">
         <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
           <Activity className="w-6 h-6" />
         </div>
         <div>
           <h3 className="text-2xl font-bold text-foreground">History</h3>
-          <p className="text-sm font-medium text-muted">{validRecent.length} problems viewed</p>
+          <p className="text-sm font-medium text-muted">
+            {validRecent.length} problems viewed
+          </p>
         </div>
       </div>
 
       {/* Recent List */}
       {validRecent.length > 0 ? (
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
           {validRecent.map((r) => {
-            const difficulty = r.problemId.difficulty as "Easy" | "Medium" | "Hard";
+            const difficulty = r.problemId.difficulty as
+              | "Easy"
+              | "Medium"
+              | "Hard";
 
             return (
               <Link
@@ -50,7 +54,9 @@ export default function RecentProblems({ recent }: { recent: RecentView[] }) {
                       <div className="text-xs font-bold text-muted tracking-wide">
                         #{r.problemId.problemNumber}
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md bg-linear-to-r text-white font-extrabold uppercase tracking-wider ${difficultyColors[difficulty]}`}>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-md bg-linear-to-r text-white font-extrabold uppercase tracking-wider ${difficultyColors[difficulty]}`}
+                      >
                         {difficulty}
                       </span>
                     </div>
@@ -69,12 +75,16 @@ export default function RecentProblems({ recent }: { recent: RecentView[] }) {
           })}
         </div>
       ) : (
-        <div className="text-center py-16 rounded-2xl border border-dashed border-border-subtle bg-background/50">
+        <div className="flex-1 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-border-subtle bg-background/50">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-500/10 mb-4">
             <Activity className="w-8 h-8 text-blue-500" />
           </div>
-          <h4 className="font-bold text-lg mb-1 text-foreground">No recent activity</h4>
-          <p className="text-sm text-muted">Problems you view will appear here.</p>
+          <h4 className="font-bold text-lg mb-1 text-foreground">
+            No recent activity
+          </h4>
+          <p className="text-sm text-muted">
+            Problems you view will appear here.
+          </p>
         </div>
       )}
     </div>
