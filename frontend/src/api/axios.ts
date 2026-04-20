@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// 🔥 GLOBAL ERROR INTERCEPTOR
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string }>) => {
