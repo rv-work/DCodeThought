@@ -55,7 +55,7 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/feed", feedRoutes);
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/health", (req, res) => {
   res.json({ status: "Backend running 🚀" });
 });
 
