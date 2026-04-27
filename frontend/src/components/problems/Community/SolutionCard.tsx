@@ -5,7 +5,7 @@ import { CommunitySolutionData } from "@/types/communitySolution";
 import { tagCommunitySolution } from "@/api/communitySolution.api";
 import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
-import { ThumbsUp, Lightbulb, Sparkles, User, Medal } from "lucide-react";
+import { ThumbsUp, Lightbulb, Sparkles, User, Medal, ChevronDown, ChevronUp } from "lucide-react";
 import { parseError } from "@/utils/parseError";
 
 interface SolutionCardProps {
@@ -25,8 +25,10 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
 
   const [isTagging, setIsTagging] = useState(false);
 
+  // NEW: State to manage Read More / Show Less
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleTag = async (type: "helpful" | "simplest" | "creative") => {
-    // 1. Agar user logged in nahi hai, to react block karo aur login ke liye bolo
     if (!user) {
       return toast.error("Please log in to react to solutions!", {
         icon: "🔒",
@@ -34,12 +36,10 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
       });
     }
 
-    // 2. Khud ke solution par react nahi kar sakte
     if (solution.userId?._id === user._id) {
       return toast.error("You can't tag your own solution!");
     }
 
-    // 3. Ek baar tag kar diya to dobara nahi kar sakte
     if (hasTagged) {
       return toast.error("You have already tagged this solution.");
     }
@@ -88,40 +88,66 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         </div>
       </div>
 
-      {/* Content: Approach & Explanation */}
-      <div className="space-y-4 mb-6 relative z-10">
-        <div>
-          <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Approach</h4>
-          <p className="text-foreground leading-relaxed bg-background-tertiary/50 p-4 rounded-xl border border-border-subtle/50">
-            {solution.approach}
-          </p>
+      {/* --- CONTENT SECTION WITH READ MORE LOGIC --- */}
+      <div className="relative z-10 mb-4">
+        <div
+          className={`transition-all duration-500 ${isExpanded ? "max-h-1250 opacity-100" : "max-h-55 overflow-hidden opacity-90"
+            }`}
+        >
+          {/* Approach & Explanation */}
+          <div className="space-y-4 mb-6">
+            <div>
+              <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Approach</h4>
+              <p className="text-foreground leading-relaxed bg-background-tertiary/50 p-4 rounded-xl border border-border-subtle/50">
+                {solution.approach}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Explanation</h4>
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {solution.explanation}
+              </p>
+            </div>
+          </div>
+
+          {/* Code Section */}
+          {solution.code && (
+            <div className="mb-2">
+              <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Code {solution.language && `(${solution.language})`}</h4>
+              <pre className="bg-black/40 p-4 rounded-xl border border-border-subtle overflow-x-auto text-sm text-blue-300">
+                <code>{solution.code}</code>
+              </pre>
+            </div>
+          )}
         </div>
-        <div>
-          <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Explanation</h4>
-          <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-            {solution.explanation}
-          </p>
-        </div>
+
+        {/* Fade-out Gradient when Collapsed */}
+        {!isExpanded && (
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-[#111111] via-[#111111]/80 to-transparent pointer-events-none"></div>
+        )}
       </div>
 
-      {/* Code Section (If provided) */}
-      {solution.code && (
-        <div className="mb-6 relative z-10">
-          <h4 className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Code {solution.language && `(${solution.language})`}</h4>
-          <pre className="bg-black/40 p-4 rounded-xl border border-border-subtle overflow-x-auto text-sm text-blue-300">
-            <code>{solution.code}</code>
-          </pre>
-        </div>
-      )}
+      {/* Toggle Button */}
+      <div className="relative z-10 flex justify-center mb-6">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 hover:bg-purple-500/20 px-4 py-1.5 rounded-full border border-purple-500/20"
+        >
+          {isExpanded ? (
+            <>Show Less <ChevronUp className="w-4 h-4" /></>
+          ) : (
+            <>... Read More <ChevronDown className="w-4 h-4" /></>
+          )}
+        </button>
+      </div>
+      {/* --- END CONTENT SECTION --- */}
 
       {/* Footer: Tagging System */}
       <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border-subtle relative z-10">
         <button
           onClick={() => handleTag("helpful")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
             } bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20`}
         >
           <ThumbsUp className="w-4 h-4" /> Helpful ({tagCounts.helpful})
@@ -130,9 +156,7 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         <button
           onClick={() => handleTag("simplest")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
             } bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20`}
         >
           <Lightbulb className="w-4 h-4" /> Simplest ({tagCounts.simplest})
@@ -141,9 +165,7 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
         <button
           onClick={() => handleTag("creative")}
           disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:-translate-y-0.5"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
             } bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20`}
         >
           <Sparkles className="w-4 h-4" /> Creative ({tagCounts.creative})

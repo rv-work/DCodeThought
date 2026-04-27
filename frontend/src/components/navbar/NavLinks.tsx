@@ -3,9 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home, Code2, Flame, Trophy,
-  Activity, Swords, Medal, Target,
-  MessageSquarePlus, Info, ChevronDown, Sparkles
+  Home,
+  Code2,
+  Flame,
+  Trophy,
+  GitCompare, // Added for Compare
+  Swords,     // Repurposed for Battle
+  Medal,
+  Target,
+  MessageSquarePlus,
+  Info,
+  ChevronDown,
+  Sparkles
 } from "lucide-react";
 import React from "react";
 
@@ -15,6 +24,7 @@ type NavItem = {
   label: string;
   icon: React.ElementType;
   hideLabel?: boolean; // The '?' makes it optional!
+  isNew?: boolean;     // Added optional flag for the 'NEW' badge
 };
 
 type NavGroup = {
@@ -43,8 +53,9 @@ const navGroups: NavGroup[] = [
     icon: Swords,
     dropdown: true,
     items: [
-      { href: "/feed", label: "Live Feed", icon: Activity },
-      { href: "/compare", label: "Compare", icon: Swords },
+      // Removed /feed
+      { href: "/compare", label: "Compare", icon: GitCompare }, // Added GitCompare icon
+      { href: "/battle", label: "Live Battle", icon: Swords, isNew: true }, // Added Live Battle
       { href: "/leaderboard", label: "Leaderboard", icon: Medal },
       { href: "/challenges", label: "Challenges", icon: Target },
     ]
@@ -91,11 +102,19 @@ export default function NavLinks() {
                       <Link
                         key={link.href}
                         href={link.href}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${active ? "bg-purple-500/10 text-purple-400" : "text-muted hover:bg-white/5 hover:text-foreground"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all relative ${active ? "bg-purple-500/10 text-purple-400" : "text-muted hover:bg-white/5 hover:text-foreground"
                           }`}
                       >
-                        <Icon className={`w-4 h-4 ${active ? "text-purple-500" : "opacity-70"}`} />
+                        {/* Battle icon ko thoda special treatment/pulse diya hai if active/hovered */}
+                        <Icon className={`w-4 h-4 ${active ? "text-purple-500" : "opacity-70"} ${link.href === '/battle' ? 'group-hover:animate-pulse text-red-400' : ''}`} />
                         {link.label}
+
+                        {/* NEW Badge rendering logic */}
+                        {link.isNew && (
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-extrabold bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">
+                            NEW
+                          </span>
+                        )}
                       </Link>
                     )
                   })}
@@ -122,8 +141,8 @@ export default function NavLinks() {
                   href={link.href}
                   title={link.label}
                   className={`cursor-pointer group/link flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-300 ${active
-                      ? "bg-background text-foreground shadow-md scale-105"
-                      : "text-muted hover:text-foreground hover:bg-white/5"
+                    ? "bg-background text-foreground shadow-md scale-105"
+                    : "text-muted hover:text-foreground hover:bg-white/5"
                     }`}
                 >
                   <Icon className={`w-4 h-4 transition-colors ${active ? "text-purple-500" : "opacity-70 group-hover/link:text-purple-400"}`} />
