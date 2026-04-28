@@ -3,6 +3,7 @@ import Report from "../models/Report.js";
 import Request from "../models/Request.js";
 import ActivityLog from "../models/ActivityLog.js";
 import CommunitySolution from "../models/CommunitySolution.js";
+import { fetchLeetCodeStats } from "../utils/leetcodeStats.js";
 
 // 1. Get Logged-in User Profile (Updated to fetch fresh data)
 export const getMyProfile = async (req, res) => {
@@ -222,6 +223,39 @@ export const getPublicProfile = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+
+
+
+// 👇 NEW: Get Public LeetCode Stats
+export const getPublicLeetcodeStats = async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Find the user to get their linked LeetCode handle
+    const user = await User.findOne({ username: username.toLowerCase() });
+    
+    if (!user || !user.socialLinks?.leetcode) {
+      return res.status(404).json({ success: false, message: "LeetCode not linked or user not found" });
+    }
+
+    const stats = await fetchLeetCodeStats(user.socialLinks.leetcode);
+    if (!stats) {
+      return res.status(400).json({ success: false, message: "Failed to fetch stats from LeetCode" });
+    }
+
+    return res.status(200).json({ success: true, stats });
+  } catch (error) {
+    console.error("Public LC Stats Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 export const getMyReports = async (req, res) => {
   try {
     const reports = await Report.find({ userId: req.user._id })
@@ -415,6 +449,61 @@ export const joinChallenge = async (req, res) => {
 
   } catch (error) {
     console.error("Join Challenge Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+// 👇 NEW: Verify and Link LeetCode
+export const linkLeetcode = async (req, res) => {
+  try {
+    const { leetcodeHandle } = req.body;
+    if (!leetcodeHandle) return res.status(400).json({ success: false, message: "LeetCode handle is required!" });
+
+    // 1. Verify if account exists on LeetCode
+    const stats = await fetchLeetCodeStats(leetcodeHandle);
+    if (!stats) {
+      return res.status(404).json({ success: false, message: "LeetCode account not found or is private!" });
+    }
+
+    // 2. Save to User Profile
+    const user = await User.findById(req.user._id);
+    if (!user.socialLinks) user.socialLinks = {};
+    
+    user.socialLinks.leetcode = leetcodeHandle;
+    user.markModified("socialLinks");
+    await user.save();
+
+    return res.status(200).json({ success: true, message: "LeetCode Linked Successfully! 🔥", user });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// 👇 NEW: Get Live Stats
+export const getLeetcodeStats = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user || !user.socialLinks?.leetcode) {
+      return res.status(400).json({ success: false, message: "LeetCode not linked" });
+    }
+
+    const stats = await fetchLeetCodeStats(user.socialLinks.leetcode);
+    if (!stats) {
+      return res.status(400).json({ success: false, message: "Failed to fetch stats" });
+    }
+
+    return res.status(200).json({ success: true, stats });
+  } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };

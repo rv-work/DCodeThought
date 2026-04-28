@@ -4,18 +4,31 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/navbar/Navbar";
-import { getPublicProfileData, toggleFriendStatus } from "@/api/profile.api";
+import {
+  getPublicProfileData,
+  toggleFriendStatus,
+  getPublicLeetcodeStats,
+  type LeetCodeData
+} from "@/api/profile.api";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import SolutionCard from "@/components/problems/Community/SolutionCard";
 import {
   Medal, User as UserIcon, Calendar, Share2, Github, Linkedin, Twitter, ExternalLink,
   Code2, UserPlus, UserMinus, Flame, BrainCircuit, Target, Trophy, Activity,
-  Star, Users, History, Terminal
+  Star, Users, History, Terminal, Clock, Shield, TrendingUp
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
 import type { PublicProfileResponse, TopSolution, ActivityLogEntry } from "@/types/profile";
 import { useAuth } from "@/hooks/useAuth";
+
+// Import Recharts
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+interface ApiError {
+  response?: { data?: { message?: string; } };
+  message?: string;
+}
 
 export default function PublicProfilePage() {
   const params = useParams();
@@ -27,18 +40,28 @@ export default function PublicProfilePage() {
   const [isFriend, setIsFriend] = useState<boolean>(false);
   const [isToggling, setIsToggling] = useState<boolean>(false);
 
+  // LeetCode States
+  const [lcData, setLcData] = useState<LeetCodeData | null>(null);
+  const [loadingLc, setLoadingLc] = useState<boolean>(false);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
         const res = await getPublicProfileData(username);
         setData(res);
-        console.log(res)
 
         if (currentUser && currentUser.friends && res.user) {
           setIsFriend(currentUser.friends.includes(res.user._id));
         }
-      } catch (err) {
+
+        // Fetch LC Stats if linked
+        if (res.user?.socialLinks?.leetcode) {
+          fetchLcStats(username);
+        }
+
+      } catch (e) {
+        const err = e as ApiError;
         toast.error(parseError(err));
       } finally {
         setLoading(false);
@@ -46,6 +69,20 @@ export default function PublicProfilePage() {
     };
     if (username) fetchProfile();
   }, [username, currentUser]);
+
+  const fetchLcStats = async (uname: string) => {
+    setLoadingLc(true);
+    try {
+      const res = await getPublicLeetcodeStats(uname);
+      setLcData(res.stats);
+    } catch (e) {
+      const err = e as ApiError;
+      toast.error(parseError(err));
+      console.log("User LC stats not public or failed to load");
+    } finally {
+      setLoadingLc(false);
+    }
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -59,7 +96,8 @@ export default function PublicProfilePage() {
       const res = await toggleFriendStatus(username);
       setIsFriend(res.isFriend);
       toast.success(res.message);
-    } catch (err) {
+    } catch (e) {
+      const err = e as ApiError;
       toast.error(parseError(err));
     } finally {
       setIsToggling(false);
@@ -84,6 +122,31 @@ export default function PublicProfilePage() {
   }
 
   const { user, heatmap, topSolutions, stats, recentActivity } = data;
+  const hasLeetcode = !!user.socialLinks?.leetcode;
+
+  // LC Helpers
+  const getStat = (diff: string) => lcData?.solved?.find(s => s.difficulty === diff)?.count || 0;
+  const totalSolved = getStat("All");
+  const getPercentage = (diff: string) => totalSolved === 0 ? 0 : Math.round((getStat(diff) / totalSolved) * 100);
+
+  const timeAgo = (timestamp: string) => {
+    const seconds = Math.floor(Date.now() / 1000 - Number(timestamp));
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hrs ago`;
+    return `${Math.floor(seconds / 86400)} days ago`;
+  };
+
+  const currentRating = Math.round(lcData?.contest?.rating || 0);
+  const peakRating = lcData?.contestHistory?.length
+    ? Math.max(...lcData.contestHistory.map(c => c.rating), currentRating)
+    : currentRating;
+
+  const getBadge = (rating: number) => {
+    if (rating >= 2150) return { title: "Guardian", color: "text-rose-500", bg: "bg-rose-500/20", border: "border-rose-500/50", Icon: Shield };
+    if (rating >= 1850) return { title: "Knight", color: "text-amber-500", bg: "bg-amber-500/20", border: "border-amber-500/50", Icon: Shield };
+    return null;
+  };
+  const lcBadge = getBadge(peakRating);
 
   return (
     <>
@@ -152,10 +215,149 @@ export default function PublicProfilePage() {
             </div>
           </div>
 
+
+          {/* 👇 LEETCODE STATS SECTION (PUBLIC VIEW) 👇 */}
+          <div className="animate-fade-in-up mt-6" style={{ animationDelay: "0.15s" }}>
+            {hasLeetcode && !loadingLc && lcData && (
+              <div className="relative rounded-4xl bg-background-secondary/60 backdrop-blur-md border border-emerald-500/30 p-8 overflow-hidden shadow-lg">
+                <div className="absolute inset-0 bg-linear-to-r from-emerald-500/5 to-transparent pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 relative z-10 border-b border-border-subtle/50 pb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 shadow-inner">
+                      <Code2 className="w-7 h-7 text-emerald-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-extrabold text-foreground tracking-tight">LeetCode Mastery</h3>
+
+                        {lcBadge && (
+                          <div className={`px-2.5 py-1 rounded-md ${lcBadge.bg} border ${lcBadge.border} flex items-center gap-1.5 shadow-sm`}>
+                            <lcBadge.Icon className={`w-3.5 h-3.5 ${lcBadge.color}`} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${lcBadge.color}`}>{lcBadge.title}</span>
+                          </div>
+                        )}
+                      </div>
+                      <a href={`https://leetcode.com/u/${user.socialLinks?.leetcode}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-muted hover:text-emerald-400 transition-colors mt-1 inline-block">
+                        @{user.socialLinks?.leetcode}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+
+                  {/* LEFT COLUMN: Solved Stats & Recent */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div className="p-6 rounded-3xl bg-background/50 border border-border-subtle shadow-inner">
+                      <div className="flex justify-between items-end mb-6">
+                        <div>
+                          <div className="text-4xl font-black text-foreground">{totalSolved}</div>
+                          <div className="text-xs font-bold text-muted uppercase tracking-widest mt-1">Total Solved</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-xs font-bold mb-1">
+                            <span className="text-emerald-500">Easy</span>
+                            <span className="text-muted">{getStat("Easy")}</span>
+                          </div>
+                          <div className="w-full h-2 bg-emerald-500/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${getPercentage("Easy")}%` }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs font-bold mb-1">
+                            <span className="text-amber-500">Medium</span>
+                            <span className="text-muted">{getStat("Medium")}</span>
+                          </div>
+                          <div className="w-full h-2 bg-amber-500/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${getPercentage("Medium")}%` }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs font-bold mb-1">
+                            <span className="text-rose-500">Hard</span>
+                            <span className="text-muted">{getStat("Hard")}</span>
+                          </div>
+                          <div className="w-full h-2 bg-rose-500/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-rose-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(225,29,72,0.5)]" style={{ width: `${getPercentage("Hard")}%` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-background/50 border border-border-subtle shadow-inner">
+                      <h4 className="text-sm font-black text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-emerald-500" /> Recent Solves
+                      </h4>
+                      <div className="space-y-3">
+                        {lcData.recentSubmissions.length > 0 ? lcData.recentSubmissions.map((sub, i) => (
+                          <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                            <span className="text-sm font-bold text-foreground truncate max-w-45">{sub.title}</span>
+                            <span className="text-xs font-medium text-muted shrink-0">{timeAgo(sub.timestamp)}</span>
+                          </div>
+                        )) : (
+                          <p className="text-xs text-muted text-center py-4">No recent submissions found.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: Contest Stats & Graph */}
+                  <div className="lg:col-span-7 space-y-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                      <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 shadow-inner">
+                        <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1 flex items-center gap-1"><Trophy className="w-3 h-3" /> Rating</div>
+                        <div className="text-xl md:text-2xl font-black text-foreground">{currentRating || "N/A"}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 shadow-inner">
+                        <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Peak</div>
+                        <div className="text-xl md:text-2xl font-black text-foreground">{Math.round(peakRating) || "N/A"}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-background/50 border border-border-subtle">
+                        <div className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Global Rank</div>
+                        <div className="text-xl font-black text-foreground">{lcData.contest?.globalRanking?.toLocaleString() || "N/A"}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-background/50 border border-border-subtle">
+                        <div className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Top %</div>
+                        <div className="text-xl font-black text-foreground">{lcData.contest?.topPercentage ? `${lcData.contest.topPercentage}%` : "N/A"}</div>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-background/50 border border-border-subtle">
+                        <div className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Attended</div>
+                        <div className="text-xl font-black text-foreground">{lcData.contest?.attendedContestsCount || 0}</div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-background/50 border border-border-subtle shadow-inner h-75 flex flex-col">
+                      <h4 className="text-sm font-black text-foreground uppercase tracking-widest mb-4">Contest Rating History</h4>
+                      {lcData.contestHistory && lcData.contestHistory.length > 0 ? (
+                        <div className="flex-1 w-full text-xs font-bold">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={lcData.contestHistory} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                              <XAxis dataKey="date" stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} minTickGap={30} />
+                              <YAxis stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
+                              <Tooltip contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '12px', fontWeight: 'bold' }} itemStyle={{ color: '#a855f7' }} labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }} />
+                              <Line type="monotone" dataKey="rating" stroke="#a855f7" strokeWidth={3} dot={{ fill: '#a855f7', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#fff', stroke: '#a855f7' }} animationDuration={1500} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center text-sm font-bold text-muted">No contest history available.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+
           {/* BENTO GRID STATS */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
 
-            {/* Platform Activity (Span 4) - NEW */}
+            {/* Platform Activity (Span 4) */}
             <div className="md:col-span-4 bg-background-secondary/40 backdrop-blur-xl border border-border-subtle p-6 rounded-4xl hover:border-emerald-500/30 transition-colors">
               <h3 className="text-sm font-extrabold text-muted uppercase tracking-wider flex items-center gap-2 mb-6"><Terminal className="w-5 h-5 text-emerald-400" /> Platform Activity</h3>
               <div className="flex items-end justify-between mb-6">
@@ -260,7 +462,7 @@ export default function PublicProfilePage() {
               </div>
             </div>
 
-            {/* Recent Activity Feed (NEW) */}
+            {/* Recent Activity Feed */}
             <div className="bg-background-secondary/40 backdrop-blur-xl border border-border-subtle p-6 rounded-4xl flex flex-col">
               <h3 className="text-sm font-extrabold text-muted uppercase tracking-wider flex items-center gap-2 mb-6"><History className="w-5 h-5 text-blue-400" /> Recent Log</h3>
 

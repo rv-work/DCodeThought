@@ -16,6 +16,7 @@ export interface User {
     github?: string;
     linkedin?: string;
     twitter?: string;
+    leetcode?: string;
   };
 
   streaks?: {

@@ -22,3 +22,11 @@ export const getUserHeatmap = async (
   const res = await api.get(`/api/activity/${userId}/heatmap`);
   return res.data;
 };
+
+// ... existing functions
+export const verifyProblemSync = async (
+  problemId: string,
+): Promise<{ success: boolean; message: string }> => {
+  const res = await api.post("/api/activity/verify-sync", { problemId });
+  return res.data;
+};
