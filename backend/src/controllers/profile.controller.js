@@ -249,6 +249,16 @@ export const getPublicLeetcodeStats = async (req, res) => {
       return res.status(400).json({ success: false, message: "Failed to fetch stats from LeetCode" });
     }
 
+    if (stats.contest && stats.contest.rating) {
+      const currentRating = Math.round(stats.contest.rating);
+      
+      await User.findByIdAndUpdate(userId, {
+        $set: { leetcodeRating: currentRating }
+      });
+      
+      console.log(`Rating updated for ${user.username}: ${currentRating}`);
+    }
+
     return res.status(200).json({ success: true, stats });
   } catch (error) {
     console.error("Public LC Stats Error:", error);
@@ -367,7 +377,6 @@ export const toggleFriend = async (req, res) => {
 };
 
 
-
 // Get Multiple Users for Comparison
 export const compareUsers = async (req, res) => {
   try {
@@ -380,17 +389,26 @@ export const compareUsers = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid usernames provided." });
     }
 
-    // 👇 FETCHING LITERALLY EVERYTHING WE HAVE
     const usersData = await User.find({ username: { $in: usernamesList } })
-      .select("name username college bio socialLinks badges streaks reputation challenge friends dateOfJoining recentlyViewed")
+      .select("name username college bio socialLinks badges streaks reputation challenge friends dateOfJoining recentlyViewed leetcodeRating")
       .lean();
 
-    const formattedUsers = usersData.map(u => ({
-      ...u,
-      problemsSolved: u.recentlyViewed ? u.recentlyViewed.length : 0,
-      friendsCount: u.friends ? u.friends.length : 0, // Calculate friends count
-      recentlyViewed: undefined, // Hide huge array to save bandwidth
-      friends: undefined // Hide friends array IDs
+
+    const formattedUsers = await Promise.all(usersData.map(async (u) => {
+      let leetcodeData = null;
+      
+      if (u.socialLinks && u.socialLinks.leetcode) {
+         leetcodeData = await fetchLeetCodeStats(u.socialLinks.leetcode);
+      }
+
+      return {
+        ...u,
+        problemsSolved: u.recentlyViewed ? u.recentlyViewed.length : 0,
+        friendsCount: u.friends ? u.friends.length : 0,
+        recentlyViewed: undefined,
+        friends: undefined,
+        leetcodeData // 👈 Send this full object to frontend
+      };
     }));
 
     return res.status(200).json({ success: true, users: formattedUsers });
@@ -463,19 +481,16 @@ export const joinChallenge = async (req, res) => {
 
 
 
-// 👇 NEW: Verify and Link LeetCode
 export const linkLeetcode = async (req, res) => {
   try {
     const { leetcodeHandle } = req.body;
     if (!leetcodeHandle) return res.status(400).json({ success: false, message: "LeetCode handle is required!" });
 
-    // 1. Verify if account exists on LeetCode
     const stats = await fetchLeetCodeStats(leetcodeHandle);
     if (!stats) {
       return res.status(404).json({ success: false, message: "LeetCode account not found or is private!" });
     }
 
-    // 2. Save to User Profile
     const user = await User.findById(req.user._id);
     if (!user.socialLinks) user.socialLinks = {};
     
@@ -489,7 +504,6 @@ export const linkLeetcode = async (req, res) => {
   }
 };
 
-// 👇 NEW: Get Live Stats
 export const getLeetcodeStats = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -502,8 +516,51 @@ export const getLeetcodeStats = async (req, res) => {
       return res.status(400).json({ success: false, message: "Failed to fetch stats" });
     }
 
+
+    if (stats.contest && stats.contest.rating) {
+      const currentRating = Math.round(stats.contest.rating);
+
+      
+      await User.findByIdAndUpdate(user._id, {
+        $set: { leetcodeRating: currentRating }
+      });
+      
+      console.log(`Rating updated for ${user.username}: ${currentRating}`);
+    }
+
     return res.status(200).json({ success: true, stats });
   } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+
+
+
+
+export const unlinkLeetcode = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (user.socialLinks) {
+      user.socialLinks.leetcode = "";
+    }
+    
+    user.leetcodeRating = 0; 
+    
+    user.markModified("socialLinks");
+    await user.save();
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "LeetCode account disconnected successfully.", 
+      user 
+    });
+  } catch (error) {
+    console.error("Unlink LC Error:", error);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };

@@ -46,3 +46,39 @@ export const verifyLeetCodeSubmission = async (leetcodeUsername, targetSlug) => 
     return false;
   }
 };
+
+
+
+
+
+export const checkAnyRecentSubmission = async (leetcodeUsername) => {
+  try {
+    const url = "https://leetcode.com/graphql";
+    const query = `
+      query getRecentSubmissions($username: String!, $limit: Int!) {
+        recentAcSubmissionList(username: $username, limit: $limit) {
+          title
+          titleSlug
+          timestamp
+        }
+      }
+    `;
+
+    const variables = { username: leetcodeUsername, limit: 5 }; // Top 5 is enough for daily check
+    const response = await axios.post(url, { query, variables });
+    const submissions = response.data?.data?.recentAcSubmissionList;
+
+    if (!submissions || submissions.length === 0) return null;
+
+    const now = Math.floor(Date.now() / 1000);
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60;
+
+    // Find the first submission that is within the last 24 hours
+    const recentSub = submissions.find(sub => (now - Number(sub.timestamp)) <= TWENTY_FOUR_HOURS);
+
+    return recentSub || null; // Return the problem details if found
+  } catch (error) {
+    console.error("LeetCode Daily Sync Error:", error.message);
+    return null;
+  }
+};

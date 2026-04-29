@@ -4,12 +4,17 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/navbar/Navbar";
-import { getLeaderboardData, getFriendsLeaderboardData, SearchUserResult, searchUsers } from "@/api/leaderboard.api";
+import {
+  getLeaderboardData,
+  getFriendsLeaderboardData,
+  SearchUserResult,
+  searchUsers
+} from "@/api/leaderboard.api";
 
 import { useAuth } from "@/hooks/useAuth";
 import {
   Trophy, Flame, BrainCircuit, GraduationCap, Medal, Rocket,
-  Target, Sparkles, Users, Search, UserPlus, UserMinus, X
+  Target, Sparkles, Users, Search, UserPlus, UserMinus, X, Code2, ExternalLink
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
@@ -22,6 +27,12 @@ import type {
   StreakType
 } from "@/types/leaderboard";
 import { toggleFriendStatus } from "@/api/profile.api";
+
+// Custom API Error Interface to avoid 'any' or 'unknown'
+interface ApiError {
+  response?: { data?: { message?: string } };
+  message?: string;
+}
 
 const isUserEntry = (entry: UserLeaderboardEntry | CollegeLeaderboardEntry): entry is UserLeaderboardEntry => {
   return (entry as UserLeaderboardEntry).username !== undefined;
@@ -49,7 +60,7 @@ function LeaderboardContent() {
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [data, setData] = useState<(UserLeaderboardEntry | CollegeLeaderboardEntry)[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0); // Used to manually refresh the board
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   // Search Modal States
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
@@ -99,7 +110,8 @@ function LeaderboardContent() {
         setHasMore(res.hasMore);
 
       } catch (err: unknown) {
-        toast.error(parseError(err));
+        const error = err as ApiError;
+        toast.error(parseError(error));
       } finally {
         setLoading(false);
         setIsLoadingMore(false);
@@ -115,12 +127,15 @@ function LeaderboardContent() {
         setIsSearching(true);
         searchUsers(searchQuery)
           .then((res) => setSearchResults(res.users))
-          .catch((err: unknown) => toast.error(parseError(err)))
+          .catch((err: unknown) => {
+            const error = err as ApiError;
+            toast.error(parseError(error));
+          })
           .finally(() => setIsSearching(false));
       } else {
         setSearchResults([]);
       }
-    }, 500); // 500ms debounce
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -134,18 +149,17 @@ function LeaderboardContent() {
       const res = await toggleFriendStatus(username);
       toast.success(res.message);
 
-      // 1. Update the search results to reflect the new button state instantly
       setSearchResults((prev) =>
         prev.map((u) => (u.username === username ? { ...u, isFriend: res.isFriend } : u))
       );
 
-      // 2. If we are on the friends tab, refresh the leaderboard behind the modal
       if (activeTab === "friends") {
         setPage(1);
         setRefreshTrigger((prev) => prev + 1);
       }
     } catch (err: unknown) {
-      toast.error(parseError(err));
+      const error = err as ApiError;
+      toast.error(parseError(error));
     }
   };
 
@@ -155,6 +169,8 @@ function LeaderboardContent() {
     if (activeTab === "rising") return `${(entry as UserLeaderboardEntry).recentSolvedCount} Solved`;
     if (activeTab === "thinker") return `${(entry as UserLeaderboardEntry).periodScore || (entry as UserLeaderboardEntry).reputation?.totalThinkerScore || 0} Rep`;
     if (activeTab === "challenge" || activeTab === "newly_joined") return `${(entry as UserLeaderboardEntry).challenge?.progress || 0}/${(entry as UserLeaderboardEntry).challenge?.activeDays} Days`;
+    if (activeTab === "leetcode") return `${(entry as UserLeaderboardEntry).leetcodeRating || 0} Rating`;
+
     if (activeTab === "streak" || activeTab === "friends") {
       if (streakType === "potd" && activeTab !== "friends") return `${(entry as UserLeaderboardEntry).streaks?.maxPotd || 0} Days`;
       if (streakType === "contest" && activeTab !== "friends") return `${(entry as UserLeaderboardEntry).streaks?.maxContest || 0} Days`;
@@ -182,9 +198,10 @@ function LeaderboardContent() {
       <div className="flex flex-wrap items-center justify-center gap-2 mb-8 p-2 bg-background-secondary/60 backdrop-blur-xl border border-border-subtle rounded-3xl w-fit mx-auto shadow-2xl">
         <button onClick={() => handleTabChange("friends")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "friends" ? "bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Users className="w-4 h-4" /> Friends</button>
         <button onClick={() => handleTabChange("streak")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "streak" ? "bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Flame className="w-4 h-4" /> Streaks</button>
+        <button onClick={() => handleTabChange("leetcode")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "leetcode" ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Code2 className="w-4 h-4" /> LeetCode</button>
         <button onClick={() => handleTabChange("thinker")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "thinker" ? "bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><BrainCircuit className="w-4 h-4" /> Thinkers</button>
         <button onClick={() => handleTabChange("rising")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "rising" ? "bg-pink-500 text-white shadow-[0_0_20px_rgba(236,72,153,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Rocket className="w-4 h-4" /> Rising</button>
-        <button onClick={() => handleTabChange("challenge")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "challenge" || activeTab === "newly_joined" ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Target className="w-4 h-4" /> Challenges</button>
+        <button onClick={() => handleTabChange("challenge")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "challenge" || activeTab === "newly_joined" ? "bg-teal-500 text-white shadow-[0_0_20px_rgba(20,184,166,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><Target className="w-4 h-4" /> Challenges</button>
         <button onClick={() => handleTabChange("college")} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${activeTab === "college" ? "bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "text-muted hover:text-foreground hover:bg-background/50"}`}><GraduationCap className="w-4 h-4" /> Colleges</button>
       </div>
 
@@ -217,13 +234,18 @@ function LeaderboardContent() {
               ))}
             </div>
           )}
+          {activeTab === "leetcode" && (
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500 text-emerald-500 animate-fade-in">
+              <Trophy className="w-3.5 h-3.5" /> Contest Ratings
+            </div>
+          )}
           {(activeTab === "challenge" || activeTab === "newly_joined") && (
             <div className="flex gap-2 animate-fade-in">
-              <button onClick={() => handleTabChange("newly_joined")} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "newly_joined" ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+              <button onClick={() => handleTabChange("newly_joined")} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "newly_joined" ? "bg-teal-500/10 border-teal-500 text-teal-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
                 <Sparkles className="w-3 h-3" /> Newly Joined
               </button>
               {[30, 50, 100, 200, 365].map((d) => (
-                <button key={d} onClick={() => { handleTabChange("challenge"); setChallengeDays(d); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "challenge" && challengeDays === d ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
+                <button key={d} onClick={() => { handleTabChange("challenge"); setChallengeDays(d); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${activeTab === "challenge" && challengeDays === d ? "bg-teal-500/10 border-teal-500 text-teal-500" : "bg-transparent border-border-subtle text-muted hover:text-foreground"}`}>
                   {d} Days
                 </button>
               ))}
@@ -279,17 +301,40 @@ function LeaderboardContent() {
               return (
                 <div key={idx} className="flex flex-col items-center group w-28 sm:w-36 md:w-52 relative">
                   <div className={`flex flex-col items-center text-center absolute ${isFirst ? "-top-36" : "-top-28"} transition-transform duration-300 group-hover:-translate-y-2 w-full`}>
-                    <div className="relative mb-3">
-                      <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-linear-to-br ${colorClass} p-1 shadow-xl flex items-center justify-center text-2xl font-black text-white`}>
-                        <div className="w-full h-full bg-background/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                          {getName(entry).charAt(0).toUpperCase()}
+
+                    {/* Conditionally Link the Avatar based on Entry Type */}
+                    {isUserEntry(entry) ? (
+                      <Link href={`/u/${entry.username}`} className="relative mb-3 block group-hover:scale-110 transition-transform">
+                        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-linear-to-br ${colorClass} p-1 shadow-xl flex items-center justify-center text-2xl font-black text-white`}>
+                          <div className="w-full h-full bg-background/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            {getName(entry).charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className={`absolute -bottom-3 -right-2 w-8 h-8 rounded-full bg-background border-2 border-background flex items-center justify-center shadow-lg ${badgeColor}`}>
+                          <Medal className="w-5 h-5 fill-current" />
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="relative mb-3">
+                        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-linear-to-br ${colorClass} p-1 shadow-xl flex items-center justify-center text-2xl font-black text-white`}>
+                          <div className="w-full h-full bg-background/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            {getName(entry).charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className={`absolute -bottom-3 -right-2 w-8 h-8 rounded-full bg-background border-2 border-background flex items-center justify-center shadow-lg ${badgeColor}`}>
+                          <Medal className="w-5 h-5 fill-current" />
                         </div>
                       </div>
-                      <div className={`absolute -bottom-3 -right-2 w-8 h-8 rounded-full bg-background border-2 border-background flex items-center justify-center shadow-lg ${badgeColor}`}>
-                        <Medal className="w-5 h-5 fill-current" />
-                      </div>
-                    </div>
-                    <h3 className="font-extrabold text-foreground truncate w-full px-2 text-sm sm:text-base">{getName(entry)}</h3>
+                    )}
+
+                    {/* Conditionally Link the Name */}
+                    {isUserEntry(entry) ? (
+                      <Link href={`/u/${entry.username}`} className="font-extrabold text-foreground truncate w-full px-2 text-sm sm:text-base hover:text-indigo-400 transition-colors">
+                        {getName(entry)}
+                      </Link>
+                    ) : (
+                      <h3 className="font-extrabold text-foreground truncate w-full px-2 text-sm sm:text-base">{getName(entry)}</h3>
+                    )}
                     <p className="text-xs font-semibold text-muted truncate w-full px-2">{getSubtitle(entry)}</p>
                   </div>
 
@@ -316,13 +361,44 @@ function LeaderboardContent() {
                 {data.slice(3).map((entry, idx) => (
                   <div key={idx} className="flex items-center px-8 py-5 hover:bg-white/5 transition-colors duration-200">
                     <div className="w-16 text-center font-extrabold text-muted">#{idx + 4}</div>
+
                     <div className="flex-1 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 font-bold border border-purple-500/20">
-                        {getName(entry).charAt(0).toUpperCase()}
-                      </div>
+                      {/* Avatar */}
+                      {isUserEntry(entry) ? (
+                        <Link href={`/u/${entry.username}`}>
+                          <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 font-bold border border-purple-500/20 hover:bg-purple-500 hover:text-white transition-all cursor-pointer">
+                            {getName(entry).charAt(0).toUpperCase()}
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold border border-blue-500/20">
+                          {getName(entry).charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
                       <div>
                         <div className="font-bold text-foreground text-base flex items-center gap-2">
-                          {getName(entry)}
+                          {isUserEntry(entry) ? (
+                            <Link href={`/u/${entry.username}`} className="hover:text-indigo-400 transition-colors">
+                              {getName(entry)}
+                            </Link>
+                          ) : (
+                            <span>{getName(entry)}</span>
+                          )}
+
+                          {/* LeetCode External Link */}
+                          {activeTab === "leetcode" && isUserEntry(entry) && entry.socialLinks?.leetcode && (
+                            <a
+                              href={`https://leetcode.com/u/${entry.socialLinks.leetcode}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1 rounded-md bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all"
+                              title="View on LeetCode"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+
                           {isUserEntry(entry) && entry.badges?.includes("Top_Thinker") && (
                             <Medal className="w-3.5 h-3.5 text-amber-500" />
                           )}
@@ -330,6 +406,7 @@ function LeaderboardContent() {
                         <div className="text-xs font-medium text-muted">{getSubtitle(entry)}</div>
                       </div>
                     </div>
+
                     <div className="w-32 text-right font-black text-foreground">
                       {getScore(entry)}
                     </div>

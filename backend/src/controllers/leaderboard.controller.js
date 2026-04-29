@@ -7,7 +7,7 @@ export const getLeaderboard = async (req, res) => {
     const { 
       tab = "streak", 
       limit = 50,
-      page = 1, // 👇 NEW: Pagination Page
+      page = 1, // 
       time = "all_time", 
       streakType = "general", 
       challengeDays = 100, 
@@ -16,7 +16,7 @@ export const getLeaderboard = async (req, res) => {
     
     const parsedLimit = parseInt(limit) || 50;
     const parsedPage = parseInt(page) || 1;
-    const skip = (parsedPage - 1) * parsedLimit; // 👇 NEW: Skip logic
+    const skip = (parsedPage - 1) * parsedLimit; 
 
     let leaderboard = [];
 
@@ -115,6 +115,9 @@ export const getLeaderboard = async (req, res) => {
         .skip(skip)
         .limit(Math.min(challengeLimit, parsedLimit));
 
+
+
+        
     } else if (tab === "newly_joined") {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -124,9 +127,21 @@ export const getLeaderboard = async (req, res) => {
         .sort({ "challenge.startDate": -1 })
         .skip(skip) // 👈
         .limit(parsedLimit);
+    
+    
+    // ---------------------------------------------------------
+    // 6. LEETCODE CONTEST RATING
+    // ---------------------------------------------------------
+    } else if (tab === "leetcode") {
+      leaderboard = await User.find({ leetcodeRating: { $gt: 0 } })
+        .select("name username college badges leetcodeRating socialLinks")
+        .sort({ leetcodeRating: -1 })
+        .skip(skip)
+        .limit(parsedLimit);
     } else {
       return res.status(400).json({ success: false, message: "Invalid leaderboard tab" });
     }
+    
 
     // Determine if there are more records
     const hasMore = leaderboard.length === parsedLimit;

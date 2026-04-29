@@ -19,6 +19,8 @@ export interface User {
     leetcode?: string;
   };
 
+  leetcodeRating: number;
+
   streaks?: {
     currentGeneral: number;
     maxGeneral: number;

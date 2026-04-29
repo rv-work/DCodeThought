@@ -30,3 +30,12 @@ export const verifyProblemSync = async (
   const res = await api.post("/api/activity/verify-sync", { problemId });
   return res.data;
 };
+
+export const syncDailyActivity = async (): Promise<{
+  success: boolean;
+  message: string;
+  newStreak?: number;
+}> => {
+  const res = await api.post("/api/activity/sync-day");
+  return res.data;
+};

@@ -30,6 +30,8 @@ const UserSchema = new mongoose.Schema({
     leetcode: { type: String, default: "" },
   },
 
+  leetcodeRating: { type: Number, default: 0 },
+
   role: {
     type: String,
     enum: ["user", "admin"],

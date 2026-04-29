@@ -119,3 +119,9 @@ export const getMyLeetcodeStats = async () => {
   const res = await api.get("/api/profile/me/leetcode-stats");
   return res.data as { success: boolean; stats: LeetCodeData }; // Pehle yahan LCStat[] tha, ab LeetCodeData kar diya
 };
+
+export const unlinkLeetcodeAccount = async () => {
+  // Using delete method as per REST standards
+  const res = await api.delete("/api/profile/me/leetcode");
+  return res.data as { success: boolean; message: string; user: UserProfile };
+};

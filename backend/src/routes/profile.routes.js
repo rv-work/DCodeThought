@@ -13,6 +13,7 @@ import {
   linkLeetcode,
   getLeetcodeStats,
   getPublicLeetcodeStats,
+  unlinkLeetcode,
 } from "../controllers/profile.controller.js";
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.get("/compare", compareUsers);
 router.post("/me/challenge", protect, joinChallenge);
 
 router.post("/me/leetcode", protect, linkLeetcode);
+router.delete("/me/leetcode", protect, unlinkLeetcode);
 router.get("/me/leetcode-stats", protect, getLeetcodeStats);
 
 export default router;

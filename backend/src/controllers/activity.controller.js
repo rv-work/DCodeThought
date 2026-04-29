@@ -2,7 +2,7 @@ import ActivityLog from "../models/ActivityLog.js";
 import mongoose from "mongoose";
 import Problem from "../models/Problem.js"; 
 import User from "../models/User.js"; 
-import { verifyLeetCodeSubmission } from "../utils/leetcodeVerifier.js";
+import { checkAnyRecentSubmission, verifyLeetCodeSubmission } from "../utils/leetcodeVerifier.js";
 import { updateStreakAndLogActivity } from "../utils/streakManager.js";
 
 export const getUserHeatmap = async (req, res) => {
@@ -75,6 +75,47 @@ export const verifyProblemSync = async (req, res) => {
 
   } catch (error) {
     console.error("Sync Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+
+
+
+
+
+export const syncMyDay = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    const leetcodeHandle = user.socialLinks?.leetcode;
+
+    if (!leetcodeHandle) {
+      return res.status(400).json({ success: false, message: "LeetCode not linked." });
+    }
+
+    // 1. Fetch from LeetCode
+    const recentSub = await checkAnyRecentSubmission(leetcodeHandle);
+
+    if (!recentSub) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No recent accepted submissions found on LeetCode in the last 24 hours. Go solve something!" 
+      });
+    }
+
+    // 2. Log Activity & Update Streak
+    // We pass `null` for problemId because it's a general LeetCode problem, not from our DB
+    const result = await updateStreakAndLogActivity(userId, null, "practice");
+
+    return res.status(200).json({ 
+      success: true, 
+      message: `Synced successfully! Last solved: ${recentSub.title} 🔥`,
+      newStreak: result?.newStreak
+    });
+
+  } catch (error) {
+    console.error("Sync My Day Error:", error);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };

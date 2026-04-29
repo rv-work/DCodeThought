@@ -8,11 +8,34 @@ import { parseError } from "@/utils/parseError";
 import toast from "react-hot-toast";
 import {
   Swords, X, Flame, BrainCircuit, Target,
-  Zap, ShieldAlert, Crosshair, Users, Star, Calendar, Quote, Shield, MapPin
+  Zap, ShieldAlert, Crosshair, Users, Star, Calendar, Quote, Shield, MapPin,
+  Code2, Terminal, Medal, Activity, Sparkles
 } from "lucide-react";
 import type { CompareUser } from "@/types/profile";
 import Link from "next/link";
 import { useUISounds } from "@/hooks/useUISounds";
+
+// 👇 100% STRICT TYPES (0 any, 0 unknown) 👇
+interface LCStat {
+  difficulty: string;
+  count: number;
+}
+
+interface LCHistory {
+  rating: number;
+  date: string;
+}
+
+interface LeetCodeDataPayload {
+  solved: LCStat[];
+  contest: { rating: number } | null;
+  contestHistory: LCHistory[];
+}
+
+type DetailedCompareUser = CompareUser & {
+  leetcodeRating?: number;
+  leetcodeData?: LeetCodeDataPayload | null;
+};
 
 const PLAYER_THEMES = [
   {
@@ -21,8 +44,8 @@ const PLAYER_THEMES = [
     border: "border-pink-500/50",
     shadow: "shadow-[0_0_50px_rgba(236,72,153,0.3)]",
     text: "text-pink-400",
-    barBg: "bg-pink-500",
-    bgHover: "hover:shadow-[0_0_80px_rgba(236,72,153,0.5)]"
+    bgHover: "hover:shadow-[0_0_80px_rgba(236,72,153,0.5)]",
+    winGlow: "shadow-[0_0_15px_rgba(236,72,153,0.4)]"
   },
   {
     name: "PLAYER 2",
@@ -30,8 +53,8 @@ const PLAYER_THEMES = [
     border: "border-blue-500/50",
     shadow: "shadow-[0_0_50px_rgba(59,130,246,0.3)]",
     text: "text-blue-400",
-    barBg: "bg-blue-500",
-    bgHover: "hover:shadow-[0_0_80px_rgba(59,130,246,0.5)]"
+    bgHover: "hover:shadow-[0_0_80px_rgba(59,130,246,0.5)]",
+    winGlow: "shadow-[0_0_15px_rgba(59,130,246,0.4)]"
   },
   {
     name: "PLAYER 3",
@@ -39,8 +62,8 @@ const PLAYER_THEMES = [
     border: "border-emerald-500/50",
     shadow: "shadow-[0_0_50px_rgba(16,185,129,0.3)]",
     text: "text-emerald-400",
-    barBg: "bg-emerald-500",
-    bgHover: "hover:shadow-[0_0_80px_rgba(16,185,129,0.5)]"
+    bgHover: "hover:shadow-[0_0_80px_rgba(16,185,129,0.5)]",
+    winGlow: "shadow-[0_0_15px_rgba(16,185,129,0.4)]"
   }
 ];
 
@@ -54,7 +77,7 @@ function CompareContent() {
 
   const [usernames, setUsernames] = useState<string[]>(initialUsernames);
   const [inputValue, setInputValue] = useState<string>("");
-  const [data, setData] = useState<CompareUser[]>([]);
+  const [data, setData] = useState<DetailedCompareUser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -68,11 +91,11 @@ function CompareContent() {
         const res = await getCompareData(usernames);
         const sortedData = usernames.map(name =>
           res.users.find(u => u.username?.toLowerCase() === name.toLowerCase())
-        ).filter((u): u is CompareUser => u !== undefined);
+        ).filter((u): u is DetailedCompareUser => u !== undefined);
 
         setData(sortedData);
         if (sortedData.length > 1) playLevelUp();
-      } catch (err) {
+      } catch (err: unknown) {
         toast.error(parseError(err));
       } finally {
         setLoading(false);
@@ -103,22 +126,35 @@ function CompareContent() {
     router.push(newUsers.length > 0 ? `/compare?u=${newUsers.join(",")}` : `/compare`, { scroll: false });
   };
 
-  // 🏆 ADVANCED MAX VALUES FOR ALL METRICS 🏆
+  // 🏆 ADVANCED MAX VALUES CALCULATIONS FOR ALL METRICS 🏆
+
+  // Safe helper to extract LeetCode solved counts
+  const getLcCount = (u: DetailedCompareUser, diff: string) => u.leetcodeData?.solved?.find(s => s.difficulty === diff)?.count || 0;
+
+  // LeetCode Live Stats
+  const m_lcTotal = Math.max(...data.map(u => getLcCount(u, "All")), -1);
+  const m_lcEasy = Math.max(...data.map(u => getLcCount(u, "Easy")), -1);
+  const m_lcMed = Math.max(...data.map(u => getLcCount(u, "Medium")), -1);
+  const m_lcHard = Math.max(...data.map(u => getLcCount(u, "Hard")), -1);
+  const m_lcCur = Math.max(...data.map(u => Math.round(u.leetcodeData?.contest?.rating || 0)), -1);
+  const m_lcPeak = Math.max(...data.map(u => {
+    const cur = Math.round(u.leetcodeData?.contest?.rating || 0);
+    return u.leetcodeData?.contestHistory?.length ? Math.max(...u.leetcodeData.contestHistory.map(c => c.rating), cur) : cur;
+  }), -1);
+
+  // DCodeThought Platform Stats
+  const m_solved = Math.max(...data.map(u => u.problemsSolved || 0), -1);
   const m_thinker = Math.max(...data.map(u => u.reputation?.totalThinkerScore || 0), -1);
   const m_helpful = Math.max(...data.map(u => u.reputation?.helpful || 0), -1);
   const m_simplest = Math.max(...data.map(u => u.reputation?.simplest || 0), -1);
   const m_creative = Math.max(...data.map(u => u.reputation?.creative || 0), -1);
-
-  const m_solved = Math.max(...data.map(u => u.problemsSolved || 0), -1);
   const m_friends = Math.max(...data.map(u => u.friendsCount || 0), -1);
   const m_badges = Math.max(...data.map(u => u.badges?.length || 0), -1);
-
   const m_maxGen = Math.max(...data.map(u => u.streaks?.maxGeneral || 0), -1);
   const m_curGen = Math.max(...data.map(u => u.streaks?.currentGeneral || 0), -1);
   const m_maxPotd = Math.max(...data.map(u => u.streaks?.maxPotd || 0), -1);
   const m_curPotd = Math.max(...data.map(u => u.streaks?.currentPotd || 0), -1);
-  const m_maxCont = Math.max(...data.map(u => u.streaks?.maxContest || 0), -1);
-  const m_curCont = Math.max(...data.map(u => u.streaks?.currentContest || 0), -1);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 pb-20">
@@ -162,17 +198,16 @@ function CompareContent() {
           <p className="text-muted sm:text-xl font-bold tracking-widest uppercase text-sm">The Arena demands a battle.</p>
         </div>
       ) : (
-        <div className={`flex flex-col xl:flex-row items-start justify-center gap-8`}>
+        <div className="flex flex-col xl:flex-row items-start justify-center gap-8">
           {data.map((user, index) => {
             const theme = PLAYER_THEMES[index];
 
-            // Safe Extractions
+            // Local user stat extraction
+            const u_solved = user.problemsSolved || 0;
             const u_thinker = user.reputation?.totalThinkerScore || 0;
             const u_helpful = user.reputation?.helpful || 0;
             const u_simplest = user.reputation?.simplest || 0;
             const u_creative = user.reputation?.creative || 0;
-
-            const u_solved = user.problemsSolved || 0;
             const u_friends = user.friendsCount || 0;
             const u_badges = user.badges?.length || 0;
 
@@ -180,14 +215,23 @@ function CompareContent() {
             const u_maxGen = user.streaks?.maxGeneral || 0;
             const u_curPotd = user.streaks?.currentPotd || 0;
             const u_maxPotd = user.streaks?.maxPotd || 0;
-            const u_curCont = user.streaks?.currentContest || 0;
-            const u_maxCont = user.streaks?.maxContest || 0;
+
 
             const c_active = user.challenge?.activeDays || 0;
             const c_prog = user.challenge?.progress || 0;
 
-            // Small helper to render win icon
-            const WinIcon = ({ isWin }: { isWin: boolean }) => isWin ? <Zap className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 animate-pulse shrink-0" /> : null;
+            // Live LeetCode Stat Extraction
+            const lc = user.leetcodeData;
+            const u_lcCur = Math.round(lc?.contest?.rating || 0);
+            const u_lcPeak = lc?.contestHistory?.length ? Math.max(...lc.contestHistory.map(c => c.rating), u_lcCur) : u_lcCur;
+            const u_lcEasy = getLcCount(user, "Easy");
+            const u_lcMed = getLcCount(user, "Medium");
+            const u_lcHard = getLcCount(user, "Hard");
+            const u_lcTotal = getLcCount(user, "All");
+
+            // Render win icon and styles
+            const WinIcon = ({ isWin }: { isWin: boolean }) => isWin ? <Zap className="w-3.5 h-3.5 text-white fill-white animate-pulse shrink-0 drop-shadow-lg" /> : null;
+            const getBorder = (isWin: boolean) => isWin ? `border-current ${theme.text} ${theme.winGlow}` : "border-border-subtle text-foreground";
 
             return (
               <div key={user._id} className="w-full flex-1 max-w-xl mx-auto relative group">
@@ -198,10 +242,12 @@ function CompareContent() {
                   </div>
                 )}
 
-                <div className={`w-full bg-background-secondary/80 backdrop-blur-xl border-2 ${theme.border} rounded-3xl overflow-hidden transition-all duration-500 shadow-xl ${theme.bgHover} flex flex-col h-full`}>
+                <div className={`w-full bg-background-secondary/80 backdrop-blur-xl border-2 ${theme.border} rounded-4xl overflow-hidden transition-all duration-500 shadow-xl ${theme.bgHover} flex flex-col h-full`}>
 
-                  {/* --- HEADER & BIO SECTION --- */}
-                  <div className={`p-6 text-center relative border-b-2 border-border-subtle/50`}>
+                  {/* --------------------------------------------------- */}
+                  {/* HEADER: IDENTITY */}
+                  {/* --------------------------------------------------- */}
+                  <div className="p-6 text-center relative border-b-2 border-border-subtle/50">
                     <div className={`absolute top-0 left-0 w-full h-full bg-linear-to-b ${theme.gradient} opacity-5 blur-3xl`} />
                     <span className={`absolute top-4 left-4 text-[10px] font-black ${theme.text} uppercase tracking-widest border border-current px-2 py-1 rounded-md`}>
                       {theme.name}
@@ -211,15 +257,15 @@ function CompareContent() {
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                     </Link>
-                    <h3 className="text-2xl font-black text-foreground tracking-tight relative z-10 truncate px-2">{user.name}</h3>
+                    <h3 className="text-3xl font-black text-foreground tracking-tight relative z-10 truncate px-2">{user.name}</h3>
                     <p className={`${theme.text} font-bold text-sm tracking-widest uppercase relative z-10 truncate`}>@{user.username}</p>
 
-                    <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-muted uppercase">
-                      {user.college ? <span className="flex items-center gap-1 bg-background px-2 py-1 rounded-md border border-border-subtle"><MapPin className="w-3 h-3" /> {user.college}</span> : <span className="text-muted/50 italic">No Clan</span>}
-                      <span className="flex items-center gap-1 bg-background px-2 py-1 rounded-md border border-border-subtle"><Calendar className="w-3 h-3" /> {new Date(user.dateOfJoining).getFullYear()}</span>
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] font-black text-muted uppercase tracking-widest">
+                      {user.college ? <span className="flex items-center gap-1 bg-background px-2 py-1.5 rounded-lg border border-border-subtle"><MapPin className="w-3 h-3" /> {user.college}</span> : <span className="text-muted/50 italic">No Clan</span>}
+                      <span className="flex items-center gap-1 bg-background px-2 py-1.5 rounded-lg border border-border-subtle"><Calendar className="w-3 h-3" /> {new Date(user.dateOfJoining).getFullYear()}</span>
                     </div>
 
-                    <div className="mt-4 px-4 pb-2">
+                    <div className="mt-4 px-4">
                       {user.bio ? (
                         <p className="text-sm text-muted italic flex items-start justify-center gap-1 line-clamp-2"><Quote className="w-3 h-3 shrink-0 opacity-50 mt-0.5" /> &quot;{user.bio}&quot;</p>
                       ) : (
@@ -228,95 +274,149 @@ function CompareContent() {
                     </div>
                   </div>
 
-                  {/* --- ALL STATS LIST --- */}
-                  <div className="p-6 flex-1 bg-background/30 flex flex-col gap-6">
+                  <div className="p-6 flex-1 flex flex-col gap-6 bg-background/20">
 
-                    {/* Core Numbers */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className={`bg-background p-3 rounded-2xl border ${u_solved === m_solved && m_solved > 0 ? "border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]" : "border-border-subtle"} text-center flex flex-col items-center justify-center`}>
-                        <Target className="w-4 h-4 text-blue-500 mb-1" />
-                        <span className="text-xl font-black text-foreground flex items-center gap-1">{u_solved} <WinIcon isWin={u_solved === m_solved && m_solved > 0} /></span>
-                        <span className="text-[9px] font-bold text-muted uppercase tracking-wider mt-1">Solved</span>
-                      </div>
-                      <div className={`bg-background p-3 rounded-2xl border ${u_thinker === m_thinker && m_thinker > 0 ? "border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : "border-border-subtle"} text-center flex flex-col items-center justify-center`}>
-                        <BrainCircuit className="w-4 h-4 text-purple-500 mb-1" />
-                        <span className="text-xl font-black text-foreground flex items-center gap-1">{u_thinker} <WinIcon isWin={u_thinker === m_thinker && m_thinker > 0} /></span>
-                        <span className="text-[9px] font-bold text-muted uppercase tracking-wider mt-1">Reputation</span>
-                      </div>
-                      <div className={`bg-background p-3 rounded-2xl border ${u_friends === m_friends && m_friends > 0 ? "border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.2)]" : "border-border-subtle"} text-center flex flex-col items-center justify-center`}>
-                        <Users className="w-4 h-4 text-pink-500 mb-1" />
-                        <span className="text-xl font-black text-foreground flex items-center gap-1">{u_friends} <WinIcon isWin={u_friends === m_friends && m_friends > 0} /></span>
-                        <span className="text-[9px] font-bold text-muted uppercase tracking-wider mt-1">Friends</span>
-                      </div>
-                    </div>
-
-                    {/* Reputation Breakdown */}
-                    <div className="bg-background rounded-2xl border border-border-subtle p-4">
-                      <h4 className="text-xs font-black text-muted uppercase tracking-widest mb-3 flex items-center gap-2"><Star className="w-3.5 h-3.5" /> Community Tags</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-bold text-amber-500 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Helpful</span>
-                          <span className="font-black flex items-center gap-1">{u_helpful} <WinIcon isWin={u_helpful === m_helpful && m_helpful > 0} /></span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-bold text-emerald-500 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Simplest</span>
-                          <span className="font-black flex items-center gap-1">{u_simplest} <WinIcon isWin={u_simplest === m_simplest && m_simplest > 0} /></span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-bold text-indigo-500 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Creative</span>
-                          <span className="font-black flex items-center gap-1">{u_creative} <WinIcon isWin={u_creative === m_creative && m_creative > 0} /></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* All Streaks Breakdown */}
-                    <div className="bg-background rounded-2xl border border-border-subtle p-4">
-                      <h4 className="text-xs font-black text-muted uppercase tracking-widest mb-3 flex items-center gap-2"><Flame className="w-3.5 h-3.5" /> Consistency (Cur / Max)</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm bg-background-secondary/50 p-2 rounded-lg">
-                          <span className="font-bold text-orange-400">General</span>
-                          <div className="flex items-center gap-3 font-black">
-                            <span className="flex items-center gap-1 text-orange-300">{u_curGen} <WinIcon isWin={u_curGen === m_curGen && m_curGen > 0} /></span>
-                            <span className="text-muted font-normal">/</span>
-                            <span className="flex items-center gap-1 text-orange-500">{u_maxGen} <WinIcon isWin={u_maxGen === m_maxGen && m_maxGen > 0} /></span>
+                    {/* --------------------------------------------------- */}
+                    {/* SECTION: LEETCODE ARSENAL (LIVE DB STATS) */}
+                    {/* --------------------------------------------------- */}
+                    {user.socialLinks?.leetcode && user.leetcodeData ? (
+                      <div>
+                        <h4 className="text-[10px] font-black text-muted uppercase tracking-widest mb-3 flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-emerald-500" /> LeetCode Combat Stats
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className={`bg-background p-3 rounded-xl border transition-all ${getBorder(u_lcCur === m_lcCur && m_lcCur > 0)} flex flex-col items-center justify-center text-center relative overflow-hidden`}>
+                              {u_lcCur === m_lcCur && m_lcCur > 0 && <div className={`absolute inset-0 bg-linear-to-t ${theme.gradient} opacity-10`} />}
+                              <span className="text-xl font-black flex items-center gap-1 relative z-10">{u_lcCur || "-"} <WinIcon isWin={u_lcCur === m_lcCur && m_lcCur > 0} /></span>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-60 relative z-10">Cur Rating</span>
+                            </div>
+                            <div className={`bg-background p-3 rounded-xl border transition-all ${getBorder(u_lcPeak === m_lcPeak && m_lcPeak > 0)} flex flex-col items-center justify-center text-center relative overflow-hidden`}>
+                              {u_lcPeak === m_lcPeak && m_lcPeak > 0 && <div className={`absolute inset-0 bg-linear-to-t ${theme.gradient} opacity-10`} />}
+                              <span className="text-xl font-black flex items-center gap-1 relative z-10">{Math.round(u_lcPeak) || "-"} <WinIcon isWin={u_lcPeak === m_lcPeak && m_lcPeak > 0} /></span>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-60 relative z-10">Peak Rating</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm bg-background-secondary/50 p-2 rounded-lg">
-                          <span className="font-bold text-blue-400">POTD</span>
-                          <div className="flex items-center gap-3 font-black">
-                            <span className="flex items-center gap-1 text-blue-300">{u_curPotd} <WinIcon isWin={u_curPotd === m_curPotd && m_curPotd > 0} /></span>
-                            <span className="text-muted font-normal">/</span>
-                            <span className="flex items-center gap-1 text-blue-500">{u_maxPotd} <WinIcon isWin={u_maxPotd === m_maxPotd && m_maxPotd > 0} /></span>
+
+                          <div className={`bg-background p-3 rounded-xl border flex items-center justify-between transition-all ${getBorder(u_lcTotal === m_lcTotal && m_lcTotal > 0)}`}>
+                            <div className="text-xs font-black uppercase tracking-widest opacity-60">Total LC Solved</div>
+                            <div className="text-xl font-black flex items-center gap-1">{u_lcTotal} <WinIcon isWin={u_lcTotal === m_lcTotal && m_lcTotal > 0} /></div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm bg-background-secondary/50 p-2 rounded-lg">
-                          <span className="font-bold text-emerald-400">Contest</span>
-                          <div className="flex items-center gap-3 font-black">
-                            <span className="flex items-center gap-1 text-emerald-300">{u_curCont} <WinIcon isWin={u_curCont === m_curCont && m_curCont > 0} /></span>
-                            <span className="text-muted font-normal">/</span>
-                            <span className="flex items-center gap-1 text-emerald-500">{u_maxCont} <WinIcon isWin={u_maxCont === m_maxCont && m_maxCont > 0} /></span>
+
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className={`bg-background p-2 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_lcEasy === m_lcEasy && m_lcEasy > 0)}`}>
+                              <span className="text-emerald-500 font-black text-sm flex items-center gap-1">{u_lcEasy}</span>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Easy</span>
+                            </div>
+                            <div className={`bg-background p-2 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_lcMed === m_lcMed && m_lcMed > 0)}`}>
+                              <span className="text-amber-500 font-black text-sm flex items-center gap-1">{u_lcMed}</span>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Medium</span>
+                            </div>
+                            <div className={`bg-background p-2 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_lcHard === m_lcHard && m_lcHard > 0)}`}>
+                              <span className="text-rose-500 font-black text-sm flex items-center gap-1">{u_lcHard}</span>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Hard</span>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-6 border border-dashed border-border-subtle rounded-2xl bg-background/50 h-full">
+                        <Code2 className="w-8 h-8 text-muted opacity-30 mb-2" />
+                        <span className="text-xs font-bold text-muted uppercase tracking-widest text-center">LeetCode Unlinked</span>
+                      </div>
+                    )}
+
+                    {/* --------------------------------------------------- */}
+                    {/* SECTION: PLATFORM ENDURANCE (Streaks & DB Solved) */}
+                    {/* --------------------------------------------------- */}
+                    <div>
+                      <h4 className="text-[10px] font-black text-muted uppercase tracking-widest mb-3 flex items-center gap-2"><Flame className="w-4 h-4 text-orange-500" /> Platform Endurance</h4>
+                      <div className="space-y-2">
+                        <div className={`flex items-center justify-between text-sm bg-background p-3 rounded-xl border transition-all ${getBorder(u_solved === m_solved && m_solved > 0)}`}>
+                          <span className="font-black text-blue-500 flex items-center gap-2"><Terminal className="w-4 h-4" /> DCode Practice</span>
+                          <span className="font-black flex items-center gap-1">{u_solved} <WinIcon isWin={u_solved === m_solved && m_solved > 0} /></span>
+                        </div>
+                        <div className={`flex items-center justify-between text-sm bg-background p-3 rounded-xl border transition-all ${getBorder(u_maxGen === m_maxGen && m_maxGen > 0)}`}>
+                          <span className="font-black text-orange-500 flex items-center gap-2"><Activity className="w-4 h-4" /> Gen Streak (C/M)</span>
+                          <div className="flex items-center gap-2 font-black">
+                            <span className={u_curGen === m_curGen && m_curGen > 0 ? theme.text : "opacity-80"}>{u_curGen}</span>
+                            <span className="text-muted/40 font-normal">/</span>
+                            <span className={`flex items-center gap-1 ${u_maxGen === m_maxGen && m_maxGen > 0 ? theme.text : ""}`}>{u_maxGen} <WinIcon isWin={u_maxGen === m_maxGen && m_maxGen > 0} /></span>
+                          </div>
+                        </div>
+                        <div className={`flex items-center justify-between text-sm bg-background p-3 rounded-xl border transition-all ${getBorder(u_maxPotd === m_maxPotd && m_maxPotd > 0)}`}>
+                          <span className="font-black text-cyan-500 flex items-center gap-2"><Target className="w-4 h-4" /> POTD Streak</span>
+                          <div className="flex items-center gap-2 font-black">
+                            <span className={u_curPotd === m_curPotd && m_curPotd > 0 ? theme.text : "opacity-80"}>{u_curPotd}</span>
+                            <span className="text-muted/40 font-normal">/</span>
+                            <span className={`flex items-center gap-1 ${u_maxPotd === m_maxPotd && m_maxPotd > 0 ? theme.text : ""}`}>{u_maxPotd} <WinIcon isWin={u_maxPotd === m_maxPotd && m_maxPotd > 0} /></span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Challenge & Badges */}
-                    <div className="grid grid-cols-2 gap-3 mt-auto">
-                      <div className="bg-background rounded-2xl border border-border-subtle p-4 flex flex-col items-center justify-center text-center">
-                        <span className="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Challenge</span>
-                        {c_active > 0 ? (
-                          <>
-                            <span className="text-2xl font-black text-foreground">{c_prog} <span className="text-xs text-muted">/ {c_active}</span></span>
-                            <span className="text-[9px] font-bold text-emerald-500 uppercase mt-1">Active</span>
-                          </>
-                        ) : (
-                          <span className="text-xs font-bold text-muted/50 italic mt-1">No Active</span>
-                        )}
+                    {/* --------------------------------------------------- */}
+                    {/* SECTION: INFLUENCE (Reputation) */}
+                    {/* --------------------------------------------------- */}
+                    <div>
+                      <h4 className="text-[10px] font-black text-muted uppercase tracking-widest mb-3 flex items-center gap-2"><BrainCircuit className="w-4 h-4 text-purple-400" /> Influence</h4>
+                      <div className="grid grid-cols-4 gap-2">
+                        {/* Total Rep (Bigger) */}
+                        <div className={`col-span-4 bg-background p-4 rounded-xl border flex items-center justify-between transition-all ${getBorder(u_thinker === m_thinker && m_thinker > 0)}`}>
+                          <div className="flex items-center gap-3">
+                            <Medal className="w-6 h-6 text-amber-400" />
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-widest opacity-60">Total Prestige</div>
+                              <div className="text-xl font-black flex items-center gap-1">{u_thinker} <WinIcon isWin={u_thinker === m_thinker && m_thinker > 0} /></div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Tags */}
+                        <div className={`bg-background p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_helpful === m_helpful && m_helpful > 0)}`}>
+                          <Shield className="w-4 h-4 text-blue-400 mb-1" />
+                          <span className="font-black text-lg flex items-center gap-1">{u_helpful}</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Help</span>
+                        </div>
+                        <div className={`bg-background p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_simplest === m_simplest && m_simplest > 0)}`}>
+                          <Zap className="w-4 h-4 text-emerald-400 mb-1" />
+                          <span className="font-black text-lg flex items-center gap-1">{u_simplest}</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Simple</span>
+                        </div>
+                        <div className={`bg-background p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_creative === m_creative && m_creative > 0)}`}>
+                          <Sparkles className="w-4 h-4 text-pink-400 mb-1" />
+                          <span className="font-black text-lg flex items-center gap-1">{u_creative}</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Create</span>
+                        </div>
+                        <div className={`bg-background p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${getBorder(u_friends === m_friends && m_friends > 0)}`}>
+                          <Users className="w-4 h-4 text-indigo-400 mb-1" />
+                          <span className="font-black text-lg flex items-center gap-1">{u_friends}</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Friends</span>
+                        </div>
                       </div>
+                    </div>
 
-                      <div className={`bg-background rounded-2xl border ${u_badges === m_badges && m_badges > 0 ? "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "border-border-subtle"} p-4 flex flex-col items-center justify-center text-center`}>
-                        <span className="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Badges</span>
-                        <span className="text-2xl font-black text-foreground flex items-center gap-1">{u_badges} <WinIcon isWin={u_badges === m_badges && m_badges > 0} /></span>
+                    {/* --------------------------------------------------- */}
+                    {/* SECTION: ARSENAL (Badges & Quests) */}
+                    {/* --------------------------------------------------- */}
+                    <div className="mt-auto">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-background rounded-2xl border border-border-subtle p-4 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                          <Target className="absolute top-2 right-2 w-16 h-16 text-muted opacity-5" />
+                          <span className="text-[10px] font-black text-muted uppercase tracking-widest mb-1 relative z-10">Active Quest</span>
+                          {c_active > 0 ? (
+                            <div className="relative z-10">
+                              <span className="text-2xl font-black text-foreground">{c_prog} <span className="text-xs text-muted">/ {c_active}</span></span>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold text-muted/50 italic mt-1 relative z-10">No Quest</span>
+                          )}
+                        </div>
+
+                        <div className={`bg-background rounded-2xl border transition-all ${getBorder(u_badges === m_badges && m_badges > 0)} p-4 flex flex-col items-center justify-center text-center relative overflow-hidden`}>
+                          <Star className="absolute top-2 right-2 w-16 h-16 text-muted opacity-5" />
+                          <span className="text-[10px] font-black text-muted uppercase tracking-widest mb-1 relative z-10">Earned Badges</span>
+                          <span className="text-3xl font-black flex items-center gap-1 relative z-10">{u_badges} <WinIcon isWin={u_badges === m_badges && m_badges > 0} /></span>
+                        </div>
                       </div>
                     </div>
 
@@ -340,7 +440,7 @@ export default function ComparePage() {
         <div className="absolute top-[20%] right-[-10%] w-150 h-150 bg-cyan-600/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute bottom-[-10%] left-[20%] w-200 h-100 bg-emerald-600/10 rounded-full blur-[150px] pointer-events-none" />
 
-        <div className="text-center space-y-4 animate-fade-in-up mb-12 relative z-10">
+        <div className="text-center space-y-4 animate-fade-in-up mb-12 relative z-10 px-4">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(239,68,68,0.2)]">
             <Swords className="w-4 h-4 animate-pulse" /> Versus Arena
           </div>
@@ -356,8 +456,6 @@ export default function ComparePage() {
           <CompareContent />
         </Suspense>
       </div>
-
-
     </>
   );
 }

@@ -9,9 +9,10 @@ import {
   getMyRecentProblems,
   linkLeetcodeAccount,
   getMyLeetcodeStats,
-  type LeetCodeData
+  type LeetCodeData,
+  unlinkLeetcodeAccount
 } from "@/api/profile.api";
-import { getMyHeatmap, type HeatmapData } from "@/api/activity.api";
+import { getMyHeatmap, syncDailyActivity, type HeatmapData } from "@/api/activity.api";
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import RecentProblems from "@/components/profile/RecentProblems";
@@ -22,7 +23,10 @@ import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import type { UserProfile, MyReport, MyRequest, RecentView } from "@/types/profile";
 import {
   User, Activity, MessageSquare, AlertTriangle, Code2,
-  Link as LinkIcon, CheckCircle2, Loader2, Trophy, Clock, Shield, TrendingUp
+  Link as LinkIcon, CheckCircle2, Loader2, Trophy, Clock, Shield, TrendingUp,
+  RefreshCw,
+  Zap,
+  Unlink
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
@@ -53,34 +57,31 @@ export default function ProfilePage() {
   const [lcData, setLcData] = useState<LeetCodeData | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
+  const [isUnlinking, setIsUnlinking] = useState(false);
+
+
+
+  const [isSyncingDay, setIsSyncingDay] = useState(false);
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [p, r, req, rec, h] = await Promise.all([
-          getProfile(),
-          getMyReports(),
-          getMyRequests(),
-          getMyRecentProblems(),
-          getMyHeatmap(),
-        ]);
-
-        setProfile(p.user);
-        setReports(r.reports);
-        setRequests(req.requests);
-        setRecent(rec.recent);
-        setHeatmap(h.heatmap);
-
-        if (p.user.socialLinks?.leetcode) fetchLcStats();
-
-      } catch (e) {
-        const err = e as ApiError;
-        toast.error(parseError(err) || "Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadAllData = async () => {
+    try {
+      const [p, r, req, rec, h] = await Promise.all([
+        getProfile(), getMyReports(), getMyRequests(), getMyRecentProblems(), getMyHeatmap(),
+      ]);
+      setProfile(p.user); setReports(r.reports); setRequests(req.requests); setRecent(rec.recent); setHeatmap(h.heatmap);
+      if (p.user.socialLinks?.leetcode) fetchLcStats();
+    } catch (e) {
+      const err = e as ApiError;
+      toast.error(parseError(err) || "Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchLcStats = async () => {
     setLoadingStats(true);
@@ -112,6 +113,69 @@ export default function ProfilePage() {
     } finally {
       setIsLinking(false);
     }
+  };
+
+
+  const handleSyncMyDay = async () => {
+    setIsSyncingDay(true);
+    try {
+      const res = await syncDailyActivity();
+      toast.success(res.message, { icon: "🔥" });
+      // Reload heatmap and profile stats so streak updates instantly!
+      loadAllData();
+    } catch (e) {
+      const err = e as ApiError;
+      toast.error(err.response?.data?.message || "Failed to sync day. Try solving a problem first!");
+    } finally {
+      setIsSyncingDay(false);
+    }
+  };
+
+
+
+  const handleUnlinkLeetcode = () => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold text-sm text-foreground block mb-1">Disconnect LeetCode?</span>
+            <span className="text-xs text-muted font-medium">
+              You will no longer be able to 1-click sync your progress, and your rating will be removed from the Global Leaderboard.
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end mt-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            disabled={isUnlinking}
+            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-border-subtle text-muted hover:bg-white/5 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              setIsUnlinking(true);
+              try {
+                const res = await unlinkLeetcodeAccount();
+                setProfile(res.user);
+                setLcData(null); // Clear the stats UI instantly
+                toast.success(res.message);
+              } catch (e: unknown) {
+                const err = e as ApiError;
+                toast.error(err.response?.data?.message || "Failed to disconnect");
+              } finally {
+                setIsUnlinking(false);
+              }
+            }}
+            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+          >
+            Yes, Disconnect
+          </button>
+        </div>
+      </div>
+    ), { duration: 8000, style: { maxWidth: '400px' } });
   };
 
   if (loading) {
@@ -268,7 +332,30 @@ export default function ProfilePage() {
                       <a href={`https://leetcode.com/u/${profile.socialLinks?.leetcode}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-muted hover:text-emerald-400 transition-colors mt-1 inline-block">
                         @{profile.socialLinks?.leetcode}
                       </a>
+
+                      <button
+                        onClick={handleUnlinkLeetcode}
+                        disabled={isUnlinking}
+                        className="text-[10px] font-bold text-red-500/70 hover:text-red-500 flex items-center gap-1 transition-colors bg-red-500/10 hover:bg-red-500/20 px-2 py-0.5 rounded-md"
+                        title="Disconnect LeetCode Account"
+                      >
+                        <Unlink className="w-3 h-3" /> {isUnlinking ? "..." : "Unlink"}
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 mt-6 md:mt-0">
+                    {loadingStats && <div className="text-sm font-bold text-emerald-500 flex items-center gap-2 animate-pulse"><Loader2 className="w-4 h-4 animate-spin" /> Fetching Stats...</div>}
+
+                    <button
+                      onClick={handleSyncMyDay}
+                      disabled={isSyncingDay}
+                      className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-blue-500 to-purple-500 text-white font-black text-sm tracking-wider uppercase overflow-hidden shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-105 transition-all disabled:opacity-70 disabled:hover:scale-100"
+                    >
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                      {isSyncingDay ? <RefreshCw className="w-4 h-4 animate-spin relative z-10" /> : <Zap className="w-4 h-4 relative z-10" />}
+                      <span className="relative z-10">{isSyncingDay ? "Syncing..." : "Sync My Day"}</span>
+                    </button>
                   </div>
                   {loadingStats && <div className="text-sm font-bold text-emerald-500 mt-4 md:mt-0 flex items-center gap-2 animate-pulse"><Loader2 className="w-4 h-4 animate-spin" /> Syncing with LC...</div>}
                 </div>
@@ -456,7 +543,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Activity Sections Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
               <RecentProblems recent={recent} />
@@ -466,7 +552,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Full Width Section */}
           <div className="animate-fade-in-up pb-12" style={{ animationDelay: "0.5s" }}>
             <MyReports reports={reports} />
           </div>

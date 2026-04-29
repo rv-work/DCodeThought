@@ -5,7 +5,8 @@ export type LeaderboardTab =
   | "rising"
   | "challenge"
   | "newly_joined"
-  | "friends";
+  | "friends"
+  | "leetcode";
 export type TimeFilter = "all_time" | "this_month" | "this_week";
 export type StreakType = "general" | "potd" | "contest";
 
@@ -15,6 +16,10 @@ export interface UserLeaderboardEntry {
   username: string;
   college?: string;
   badges: string[];
+  leetcodeRating?: number; // 👇 NEW FIELD
+  socialLinks?: {
+    leetcode?: string; // We might need this to show their handle
+  };
   streaks?: {
     currentGeneral: number;
     maxGeneral: number;
@@ -23,6 +28,7 @@ export interface UserLeaderboardEntry {
     currentContest?: number;
     maxContest?: number;
   };
+
   reputation?: {
     helpful: number;
     simplest: number;

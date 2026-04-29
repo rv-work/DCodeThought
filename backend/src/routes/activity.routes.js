@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/auth.js";
-import { getUserHeatmap, verifyProblemSync } from "../controllers/activity.controller.js";
+import { getUserHeatmap, syncMyDay, verifyProblemSync } from "../controllers/activity.controller.js";
 
 const router = express.Router();
 
@@ -11,5 +11,7 @@ router.get("/me/heatmap", protect, getUserHeatmap);
 router.get("/:userId/heatmap", getUserHeatmap);
 
 router.post("/verify-sync", protect, verifyProblemSync);
+
+router.post("/sync-day", protect, syncMyDay);
 
 export default router;
