@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "react-hot-toast";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata = {
   title: "DCodeThought | Decode the Logic",
@@ -57,6 +58,8 @@ export default function RootLayout({
           }}
         />
       </body>
+
+      <GoogleAnalytics gaId="G-QYFXZCTRE5" />
     </html>
   );
 }
