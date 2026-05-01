@@ -66,20 +66,18 @@ const UserSchema = new mongoose.Schema({
     maxGeneral: { type: Number, default: 0 },
     currentPotd: { type: Number, default: 0 },
     maxPotd: { type: Number, default: 0 },
-    // 👇 NEW CONTEST FIELDS
     currentContest: { type: Number, default: 0 }, 
     maxContest: { type: Number, default: 0 },
     
     lastActivityDate: { type: Date, default: null },
     lastPotdDate: { type: Date, default: null },
-    // 👇 NEW CONTEST DATE
     lastContestDate: { type: Date, default: null }, 
   },
 
   challenge: {
-    activeDays: { type: Number, default: null }, // Removed the enum restriction
-    title: { type: String, default: null },      // NEW: Custom title
-    desc: { type: String, default: null },       // NEW: Custom description
+    activeDays: { type: Number, default: null }, 
+    title: { type: String, default: null },     
+    desc: { type: String, default: null },      
     startDate: { type: Date, default: null },
     progress: { type: Number, default: 0 },
   },
@@ -88,7 +86,7 @@ const UserSchema = new mongoose.Schema({
     helpful: { type: Number, default: 0 },
     simplest: { type: Number, default: 0 },
     creative: { type: Number, default: 0 },
-    totalThinkerScore: { type: Number, default: 0 }, // For "Best Thinker" Leaderboard
+    totalThinkerScore: { type: Number, default: 0 }, 
   },
 
   badges: [{

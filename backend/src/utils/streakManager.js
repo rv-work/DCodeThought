@@ -16,12 +16,12 @@ export const updateStreakAndLogActivity = async (
   try {
     const now = new Date();
 
-    // IST based date strings
+    // 1. Aaj aur kal ki strict IST date strings nikalna
     const dateString = getISTDateString(now);
-
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = getISTDateString(yesterday);
+    
+    // Exactly 24 hours subtract karke 'yesterday' nikalna is mathematically safer
+    const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayString = getISTDateString(yesterdayDate);
 
     // 1. Log Activity for Heatmap
     try {
@@ -33,7 +33,7 @@ export const updateStreakAndLogActivity = async (
       });
     } catch (err) {
       if (err.code !== 11000) throw err;
-      // Duplicate activity for same day ignore kar do
+      // Agar same user ne same problem same din dobara ki hai, toh ignore karenge
     }
 
     // 2. Fetch User
@@ -46,62 +46,48 @@ export const updateStreakAndLogActivity = async (
 
     // Safety check for Challenge Object
     if (!user.challenge) {
-      user.challenge = {
-        activeDays: null,
-        progress: 0,
-        startDate: null,
-      };
+      user.challenge = { activeDays: null, progress: 0, startDate: null };
     }
 
-    // Kya aaj ki pehli activity hai?
+    // Aaj ki pehli activity check
     const isFirstSolveOfToday = lastActivityString !== dateString;
 
     // ==========================================
     // A. GENERAL STREAK & CHALLENGE LOGIC
     // ==========================================
     if (isFirstSolveOfToday) {
+      
       if (lastActivityString === yesterdayString) {
+        // Kal solve kiya tha, toh streak +1 karo
         user.streaks.currentGeneral += 1;
       } else {
+        // Kal solve NAHI kiya tha, toh streak dobara 1 se shuru hogi
         user.streaks.currentGeneral = 1;
 
-        // Agar streak toot gayi to challenge reset
         if (user.challenge.activeDays) {
           user.challenge.progress = 0;
         }
       }
 
-      if (
-        user.streaks.currentGeneral >
-        (user.streaks.maxGeneral || 0)
-      ) {
+      // Update max streak
+      if (user.streaks.currentGeneral > (user.streaks.maxGeneral || 0)) {
         user.streaks.maxGeneral = user.streaks.currentGeneral;
       }
 
+      // Last activity update karo
       user.streaks.lastActivityDate = now;
 
       // --- CHALLENGE PROGRESSION ---
       if (user.challenge.activeDays) {
         user.challenge.progress += 1;
         const progress = user.challenge.progress;
-
         const badges = new Set(user.badges || []);
 
-        if (progress >= 365) {
-          badges.add("365_Days");
-          badges.delete("200_Days");
-        } else if (progress >= 200) {
-          badges.add("200_Days");
-          badges.delete("100_Days");
-        } else if (progress >= 100) {
-          badges.add("100_Days");
-          badges.delete("50_Days");
-        } else if (progress >= 50) {
-          badges.add("50_Days");
-          badges.delete("30_Days");
-        } else if (progress >= 30) {
-          badges.add("30_Days");
-        }
+        if (progress >= 365) { badges.add("365_Days"); badges.delete("200_Days"); }
+        else if (progress >= 200) { badges.add("200_Days"); badges.delete("100_Days"); }
+        else if (progress >= 100) { badges.add("100_Days"); badges.delete("50_Days"); }
+        else if (progress >= 50) { badges.add("50_Days"); badges.delete("30_Days"); }
+        else if (progress >= 30) { badges.add("30_Days"); }
 
         user.badges = Array.from(badges);
 
@@ -110,7 +96,7 @@ export const updateStreakAndLogActivity = async (
         }
       }
     } else {
-      // User ne already aaj solve kiya tha but challenge abhi join kiya
+      // Aaj already solve kiya tha, par aaj hi naya challenge liya hai
       if (user.challenge.activeDays && user.challenge.progress === 0) {
         user.challenge.progress = 1;
       }
@@ -126,19 +112,14 @@ export const updateStreakAndLogActivity = async (
 
       if (lastPotdString !== dateString) {
         if (lastPotdString === yesterdayString) {
-          user.streaks.currentPotd =
-            (user.streaks.currentPotd || 0) + 1;
+          user.streaks.currentPotd = (user.streaks.currentPotd || 0) + 1;
         } else {
           user.streaks.currentPotd = 1;
         }
 
-        if (
-          user.streaks.currentPotd >
-          (user.streaks.maxPotd || 0)
-        ) {
+        if (user.streaks.currentPotd > (user.streaks.maxPotd || 0)) {
           user.streaks.maxPotd = user.streaks.currentPotd;
         }
-
         user.streaks.lastPotdDate = now;
       }
     }
@@ -152,42 +133,29 @@ export const updateStreakAndLogActivity = async (
         : null;
 
       if (lastContestString !== dateString) {
-        const lastContestDate = user.streaks.lastContestDate
-          ? new Date(user.streaks.lastContestDate)
-          : null;
-
         let daysDiff = 9999;
-
-        if (lastContestDate) {
-          const contestToday = new Date(getISTDateString(now));
-          const contestLastDate = new Date(
-            getISTDateString(lastContestDate)
-          );
-
-          daysDiff = Math.floor(
-            (contestToday - contestLastDate) / (1000 * 60 * 60 * 24)
-          );
+        if (user.streaks.lastContestDate) {
+          // Calculate difference logically in IST
+          const contestToday = new Date(dateString);
+          const contestLastDate = new Date(lastContestString);
+          daysDiff = Math.floor((contestToday - contestLastDate) / (1000 * 60 * 60 * 24));
         }
 
+        // Contest is weekly, giving an 8-day grace period
         if (daysDiff <= 8 && daysDiff > 0) {
-          user.streaks.currentContest =
-            (user.streaks.currentContest || 0) + 1;
+          user.streaks.currentContest = (user.streaks.currentContest || 0) + 1;
         } else {
           user.streaks.currentContest = 1;
         }
 
-        if (
-          user.streaks.currentContest >
-          (user.streaks.maxContest || 0)
-        ) {
+        if (user.streaks.currentContest > (user.streaks.maxContest || 0)) {
           user.streaks.maxContest = user.streaks.currentContest;
         }
-
         user.streaks.lastContestDate = now;
       }
     }
 
-    // Force mark nested fields modified
+    // Force mark modified to let mongoose know nested object changed
     user.markModified("streaks");
     user.markModified("challenge");
     user.markModified("badges");

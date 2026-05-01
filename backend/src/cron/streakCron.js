@@ -2,26 +2,28 @@ import cron from "node-cron";
 import User from "../models/User.js";
 
 export const startCronJobs = () => {
-  // Ye job roz raat 12:00 AM par chalegi (00:00)
   cron.schedule("0 0 * * *", async () => {
     console.log("CRON JOB STARTED: Checking and Resetting Streaks...");
 
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Aaj ki shuruaat (Midnight)
+      // 1. Get today's date exactly in IST format (YYYY-MM-DD)
+      const todayISTString = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+      const [year, month, day] = todayISTString.split('-');
+
+      // 2. Create STRICT Date objects for Midnight boundaries using +05:30 (IST offset)
+      // Ye exactly aaj raat 12:00 AM IST ka exact millisecond time banayega
+      const todayMidnightIST = new Date(`${year}-${month}-${day}T00:00:00+05:30`);
       
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1); 
-      // Jo log 'yesterday' se pehle aakhri baar active the, unki streak gai.
+      // 3. Yesterday Midnight IST (Aakhri 24 ghante ki shuruaat)
+      const yesterdayMidnightIST = new Date(todayMidnightIST.getTime() - 24 * 60 * 60 * 1000);
+      
+      // 4. Last Week Midnight IST (Contest ke liye)
+      const lastWeekMidnightIST = new Date(todayMidnightIST.getTime() - 8 * 24 * 60 * 60 * 1000);
 
-      const lastWeek = new Date(today);
-      lastWeek.setDate(lastWeek.getDate() - 8); 
-      // Contest 7 din ka hota hai, so 8 din ka gap check kar rahe hain
-
-      // 1. GENERAL STREAK & CHALLENGE RESET
-      // Find: Last activity is older than yesterday
+      // --- 1. GENERAL STREAK & CHALLENGE RESET ---
+      // Agar last activity kal (yesterday) raat 12 baje se pehle ki hai, matlab kal poora din miss ho gaya
       const generalResetResult = await User.updateMany(
-        { "streaks.lastActivityDate": { $lt: yesterday } },
+        { "streaks.lastActivityDate": { $lt: yesterdayMidnightIST } },
         { 
           $set: { 
             "streaks.currentGeneral": 0,
@@ -31,16 +33,16 @@ export const startCronJobs = () => {
       );
       console.log(`Reset General Streak & Challenges for ${generalResetResult.modifiedCount} users.`);
 
-      // 2. POTD STREAK RESET
+      // --- 2. POTD STREAK RESET ---
       const potdResetResult = await User.updateMany(
-        { "streaks.lastPotdDate": { $lt: yesterday } },
+        { "streaks.lastPotdDate": { $lt: yesterdayMidnightIST } },
         { $set: { "streaks.currentPotd": 0 } }
       );
       console.log(`Reset POTD Streaks for ${potdResetResult.modifiedCount} users.`);
 
-      // 3. CONTEST STREAK RESET (Weekly based)
+      // --- 3. CONTEST STREAK RESET ---
       const contestResetResult = await User.updateMany(
-        { "streaks.lastContestDate": { $lt: lastWeek } },
+        { "streaks.lastContestDate": { $lt: lastWeekMidnightIST } },
         { $set: { "streaks.currentContest": 0 } }
       );
       console.log(`Reset Contest Streaks for ${contestResetResult.modifiedCount} users.`);
@@ -51,71 +53,6 @@ export const startCronJobs = () => {
       console.error("CRON JOB ERROR: Failed to reset streaks", error);
     }
   }, {
-    timezone: "Asia/Kolkata" // Indian Standard Time ke hisab se raat 12 baje
+    timezone: "Asia/Kolkata"
   });
 };
-
-
-
-
-
-
-
-
-
-
-
-// import cron from "node-cron";
-// import User from "../models/User.js";
-
-// export const startCronJobs = () => {
-//   // TEST CRON: Roz sham 6:10 PM IST pe chalega
-//   cron.schedule(
-//     "10 18 * * *",
-//     async () => {
-//       console.log("========================================");
-//       console.log("CRON JOB STARTED");
-//       console.log("Current Server Time:", new Date().toString());
-//       console.log("Current IST Time:", new Date().toLocaleString("en-IN", {
-//         timeZone: "Asia/Kolkata",
-//       }));
-
-//       try {
-//         const result = await User.updateMany(
-//           {},
-//           {
-//             $set: {
-//               "challenge.progress": 0,
-//             },
-//           }
-//         );
-
-//         console.log("CRON SUCCESS");
-//         console.log(
-//           `Challenge progress reset for ${result.modifiedCount} users.`
-//         );
-
-//         const sampleUsers = await User.find({}, "name challenge.progress")
-//           .limit(5);
-
-//         console.log("Sample Users After Reset:");
-//         sampleUsers.forEach((user) => {
-//           console.log(
-//             `User: ${user.name}, Progress: ${user.challenge?.progress}`
-//           );
-//         });
-
-//         console.log("CRON JOB COMPLETED SUCCESSFULLY");
-//       } catch (error) {
-//         console.error("CRON JOB ERROR:", error);
-//       }
-
-//       console.log("========================================");
-//     },
-//     {
-//       timezone: "Asia/Kolkata",
-//     }
-//   );
-
-//   console.log("Test Cron Registered Successfully for 6:10 PM IST");
-// };
