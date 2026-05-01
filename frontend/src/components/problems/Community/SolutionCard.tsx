@@ -15,17 +15,11 @@ interface SolutionCardProps {
 export default function SolutionCard({ solution }: SolutionCardProps) {
   const { user } = useAuth();
 
-  // Local state for optimistic UI updates
   const [tagCounts, setTagCounts] = useState(solution.tagCounts);
 
-  // Safely check if the logged-in user has already tagged this solution
-  const [hasTagged, setHasTagged] = useState(
-    user ? solution.taggedBy.some((t) => t.userId === user._id) : false
-  );
 
   const [isTagging, setIsTagging] = useState(false);
 
-  // NEW: State to manage Read More / Show Less
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleTag = async (type: "helpful" | "simplest" | "creative") => {
@@ -40,15 +34,12 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
       return toast.error("You can't tag your own solution!");
     }
 
-    if (hasTagged) {
-      return toast.error("You have already tagged this solution.");
-    }
+
 
     setIsTagging(true);
     try {
       const res = await tagCommunitySolution(solution._id, { tagType: type });
       setTagCounts(res.tagCounts);
-      setHasTagged(true);
       toast.success(`Successfully tagged as ${type}!`);
     } catch (err) {
       toast.error(parseError(err));
@@ -146,27 +137,24 @@ export default function SolutionCard({ solution }: SolutionCardProps) {
       <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border-subtle relative z-10">
         <button
           onClick={() => handleTag("helpful")}
-          disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
-            } bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20`}
+          disabled={isTagging}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border  bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20`}
         >
           <ThumbsUp className="w-4 h-4" /> Helpful ({tagCounts.helpful})
         </button>
 
         <button
           onClick={() => handleTag("simplest")}
-          disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
-            } bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20`}
+          disabled={isTagging}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border  bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20`}
         >
           <Lightbulb className="w-4 h-4" /> Simplest ({tagCounts.simplest})
         </button>
 
         <button
           onClick={() => handleTag("creative")}
-          disabled={isTagging || hasTagged}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${hasTagged ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5"
-            } bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20`}
+          disabled={isTagging}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border  bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20`}
         >
           <Sparkles className="w-4 h-4" /> Creative ({tagCounts.creative})
         </button>

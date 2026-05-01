@@ -5,10 +5,8 @@ import { getProblemSolutions } from "@/api/communitySolution.api";
 import { CommunitySolutionData } from "@/types/communitySolution";
 import SolutionCard from "./SolutionCard";
 import SubmitSolutionForm from "./SubmitSolutionForm";
-// 👇 FIX: Added Lock icon and Link
 import { Users, Medal, ThumbsUp, Lightbulb, Sparkles, Plus, X, Lock } from "lucide-react";
 import Link from "next/link";
-// 👇 FIX: Added useAuth hook
 import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
 import { parseError } from "@/utils/parseError";
@@ -83,7 +81,6 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
   return (
     <div className="space-y-8 animate-fade-in-up w-full">
 
-      {/* Header & Action Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[2.5rem] bg-background-secondary/30 backdrop-blur-2xl border border-border-subtle p-6 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
@@ -95,7 +92,6 @@ export default function CommunitySolutionsTab({ problemId }: { problemId: string
           </div>
         </div>
 
-        {/* 👇 FIX: Only show the toggle button if the user is logged in */}
         {user && (
           <button
             onClick={() => setShowSubmitForm(!showSubmitForm)}
