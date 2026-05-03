@@ -252,7 +252,7 @@ export const getPublicLeetcodeStats = async (req, res) => {
     if (stats.contest && stats.contest.rating) {
       const currentRating = Math.round(stats.contest.rating);
       
-      await User.findByIdAndUpdate(userId, {
+      await User.findByIdAndUpdate(user._id, {
         $set: { leetcodeRating: currentRating }
       });
       
@@ -265,6 +265,11 @@ export const getPublicLeetcodeStats = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+
+
+
 
 export const getMyReports = async (req, res) => {
   try {
