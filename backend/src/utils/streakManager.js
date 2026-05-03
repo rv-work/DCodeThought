@@ -11,7 +11,8 @@ const getISTDateString = (date = new Date()) => {
 export const updateStreakAndLogActivity = async (
   userId,
   problemId,
-  problemType = "practice"
+  problemType = "practice",
+  solveCount = 1 // 🔥 Naya parameter add kiya for Heatmap count sync
 ) => {
   try {
     const now = new Date();
@@ -23,20 +24,32 @@ export const updateStreakAndLogActivity = async (
     const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const yesterdayString = getISTDateString(yesterdayDate);
 
-    // 1. Log Activity for Heatmap
+    // ==========================================
+    // 🔥 1. SMART ACTIVITY LOGGING (Duplicate Fix)
+    // ==========================================
     try {
-      await ActivityLog.create({
-        userId,
-        problemId,
-        dateString,
-        type: problemType,
-      });
+      if (problemId === null) {
+        // LeetCode Sync ke liye: Agar same day dubara sync ho raha hai toh TOTAL count SET kar do
+        await ActivityLog.findOneAndUpdate(
+          { userId, problemId: null, dateString },
+          { $set: { type: problemType, count: solveCount } }, 
+          { upsert: true, new: true }
+        );
+      } else {
+        // Internal platform problem ke liye: Count humesha 1 rahega, same problem duplicate nahi hogi
+        await ActivityLog.findOneAndUpdate(
+          { userId, problemId, dateString },
+          { $setOnInsert: { type: problemType, count: 1 } },
+          { upsert: true, new: true }
+        );
+      }
     } catch (err) {
-      if (err.code !== 11000) throw err;
-      // Agar same user ne same problem same din dobara ki hai, toh ignore karenge
+      console.error("Activity log upsert failed:", err);
     }
 
-    // 2. Fetch User
+    // ==========================================
+    // 2. FETCH USER & CHECK PREVIOUS ACTIVITY
+    // ==========================================
     const user = await User.findById(userId);
     if (!user) return;
 
@@ -65,7 +78,7 @@ export const updateStreakAndLogActivity = async (
         user.streaks.currentGeneral = 1;
 
         if (user.challenge.activeDays) {
-          user.challenge.progress = 0;
+          user.challenge.progress = 0; // Streak tutne par challenge reset
         }
       }
 

@@ -87,9 +87,14 @@ export const getLeaderboard = async (req, res) => {
 
       leaderboard = await ActivityLog.aggregate([
         { $match: { createdAt: { $gte: sevenDaysAgo } } },
-        { $group: { _id: "$userId", recentSolvedCount: { $sum: 1 } } },
+        { 
+          $group: { 
+            _id: "$userId", 
+            recentSolvedCount: { $sum: "$count" } // 🔥 Cleaned!
+          } 
+        },
         { $sort: { recentSolvedCount: -1 } },
-        { $skip: skip }, // 👈
+        { $skip: skip },
         { $limit: parsedLimit },
         { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
         { $unwind: "$user" },
@@ -99,7 +104,7 @@ export const getLeaderboard = async (req, res) => {
     // ---------------------------------------------------------
     // 5. CHALLENGES & NEWLY JOINED
     // ---------------------------------------------------------
-    } else if (tab === "challenge") {
+    }else if (tab === "challenge") {
       let challengeLimit = 50; 
       const days = Number(challengeDays);
       if (days === 365) challengeLimit = 50;

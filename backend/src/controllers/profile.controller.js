@@ -86,13 +86,14 @@ export const getPublicProfile = async (req, res) => {
       });
     }
 
-    // Heatmap Data
+  
+   // 🔥 Heatmap Data Cleaned
     const heatmapData = await ActivityLog.aggregate([
       { $match: { userId: user._id } },
       {
         $group: {
           _id: "$dateString",
-          count: { $sum: 1 },
+          count: { $sum: "$count" }, 
         },
       },
       {
@@ -104,6 +105,45 @@ export const getPublicProfile = async (req, res) => {
       },
       { $sort: { date: 1 } },
     ]);
+
+    // 🔥 Stats Cleaned
+    const [totalActivitiesRes] = await ActivityLog.aggregate([
+      { $match: { userId: user._id } },
+      { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+    const totalActivities = totalActivitiesRes?.total || 0;
+
+    const [totalPracticeRes] = await ActivityLog.aggregate([
+      { $match: { userId: user._id, type: "practice" } },
+      { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+    const totalPracticeSolved = totalPracticeRes?.total || 0;
+
+    const [totalPotdRes] = await ActivityLog.aggregate([
+      { $match: { userId: user._id, type: "potd" } },
+      { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+    const totalPotdSolved = totalPotdRes?.total || 0;
+
+    const [totalContestRes] = await ActivityLog.aggregate([
+      { $match: { userId: user._id, type: "contest" } },
+      { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+    const totalContestParticipated = totalContestRes?.total || 0;
+
+    const [totalFeedRes] = await ActivityLog.aggregate([
+      { $match: { userId: user._id, type: "feed" } },
+      { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+    const totalFeedPosts = totalFeedRes?.total || 0;
+
+    // Recent activity
+    const recentActivity = await ActivityLog.find({
+      userId: user._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("type dateString createdAt");
 
     // Top Solutions
     const topSolutions = await CommunitySolution.find({
@@ -118,38 +158,6 @@ export const getPublicProfile = async (req, res) => {
       .limit(3)
       .select("-code");
 
-    // Total activity stats
-    const totalActivities = await ActivityLog.countDocuments({
-      userId: user._id,
-    });
-
-    const totalPracticeSolved = await ActivityLog.countDocuments({
-      userId: user._id,
-      type: "practice",
-    });
-
-    const totalPotdSolved = await ActivityLog.countDocuments({
-      userId: user._id,
-      type: "potd",
-    });
-
-    const totalContestParticipated = await ActivityLog.countDocuments({
-      userId: user._id,
-      type: "contest",
-    });
-
-    const totalFeedPosts = await ActivityLog.countDocuments({
-      userId: user._id,
-      type: "feed",
-    });
-
-    // Recent activity
-    const recentActivity = await ActivityLog.find({
-      userId: user._id,
-    })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("type dateString createdAt");
 
     // Joined days ago
     const joinedDaysAgo = Math.floor(
@@ -509,6 +517,12 @@ export const linkLeetcode = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
 export const getLeetcodeStats = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -538,6 +552,15 @@ export const getLeetcodeStats = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+
+
+
+
+
+
+
 
 
 

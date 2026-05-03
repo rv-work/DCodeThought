@@ -64,19 +64,30 @@ export const checkAnyRecentSubmission = async (leetcodeUsername) => {
       }
     `;
 
-    const variables = { username: leetcodeUsername, limit: 5 }; // Top 5 is enough for daily check
+    // Limit 50 rakhte hain taaki din bhar ke cover ho jayein
+    const variables = { username: leetcodeUsername, limit: 50 }; 
     const response = await axios.post(url, { query, variables });
     const submissions = response.data?.data?.recentAcSubmissionList;
 
     if (!submissions || submissions.length === 0) return null;
 
-    const now = Math.floor(Date.now() / 1000);
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60;
+    // 🔥 NAYA LOGIC: Aaj raat 12:00 AM (IST) ka exact Unix Timestamp nikalna
+    const now = new Date();
+    const istDateStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // Dega: "YYYY-MM-DD"
+    const midnightIST = new Date(`${istDateStr}T00:00:00+05:30`); // Exact IST Midnight set kiya
+    const startOfTodayTimestamp = Math.floor(midnightIST.getTime() / 1000); // Unix me convert kiya
 
-    // Find the first submission that is within the last 24 hours
-    const recentSub = submissions.find(sub => (now - Number(sub.timestamp)) <= TWENTY_FOUR_HOURS);
+    // 🔥 Sirf aaj 12:00 AM ke baad wale submissions filter karo
+    const todaySubs = submissions.filter(
+      (sub) => Number(sub.timestamp) >= startOfTodayTimestamp
+    );
 
-    return recentSub || null; // Return the problem details if found
+    if (todaySubs.length === 0) return null;
+
+    return {
+      count: todaySubs.length,       // 👈 Exact aaj ke total solved
+      latestProblem: todaySubs[0],   // 👈 Sabse recent wala title
+    };
   } catch (error) {
     console.error("LeetCode Daily Sync Error:", error.message);
     return null;

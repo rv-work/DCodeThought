@@ -7,24 +7,17 @@ import { updateStreakAndLogActivity } from "../utils/streakManager.js";
 
 export const getUserHeatmap = async (req, res) => {
   try {
-    // Agar profile khud ki hai (from auth middleware) ya public username se find kar rahe hain
-    // Abhi ke liye hum logged-in user ka maan kar chalte hain
     const userId = req.params.userId || req.user._id;
 
-    // MongoDB Aggregation to group by dateString and count submissions per day
     const heatmapData = await ActivityLog.aggregate([
       { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: "$dateString", count: { $sum: 1 } } },
+      { $group: { _id: "$dateString", count: { $sum: "$count" } } }, // 🔥 Cleaned!
       { $project: { date: "$_id", count: 1, _id: 0 } },
-      { $sort: { date: 1 } } // Sort chronologically
+      { $sort: { date: 1 } }
     ]);
 
-    res.status(200).json({
-      success: true,
-      heatmap: heatmapData, // Returns array like [{ date: "2026-03-18", count: 2 }, ...]
-    });
+    res.status(200).json({ success: true, heatmap: heatmapData });
   } catch (error) {
-    console.error("Error fetching heatmap:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -83,7 +76,6 @@ export const verifyProblemSync = async (req, res) => {
 
 
 
-
 export const syncMyDay = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -95,25 +87,31 @@ export const syncMyDay = async (req, res) => {
     }
 
     // 1. Fetch from LeetCode
-    const recentSub = await checkAnyRecentSubmission(leetcodeHandle);
+    const recentData = await checkAnyRecentSubmission(leetcodeHandle);
 
-    if (!recentSub) {
+    if (!recentData) {
       return res.status(400).json({ 
         success: false, 
-        message: "No recent accepted submissions found on LeetCode in the last 24 hours. Go solve something!" 
+        // 🔥 Yahan message change kar diya "TODAY" ke liye
+        message: "No accepted submissions found on LeetCode for TODAY. Go solve something!" 
       });
     }
 
-    // 2. Log Activity & Update Streak
-    // We pass `null` for problemId because it's a general LeetCode problem, not from our DB
-    const result = await updateStreakAndLogActivity(userId, null, "practice");
+    // 2. Update Streak & Log Activity with solve count
+    const result = await updateStreakAndLogActivity(
+      userId, 
+      null, 
+      "practice", 
+      recentData.count 
+    );
 
     return res.status(200).json({ 
       success: true, 
-      message: `Synced successfully! Last solved: ${recentSub.title} 🔥`,
+      message: `Synced ${recentData.count} problem(s)! Last solved: ${recentData.latestProblem.title} 🔥`,
       newStreak: result?.newStreak
     });
 
+  // 🔥 Catch block add kar diya
   } catch (error) {
     console.error("Sync My Day Error:", error);
     return res.status(500).json({ success: false, message: "Server Error" });
