@@ -1,42 +1,34 @@
 import User from "../models/User.js";
 import ActivityLog from "../models/ActivityLog.js";
 
-// Always return IST date string in YYYY-MM-DD format
-const getISTDateString = (date = new Date()) => {
-  return date.toLocaleDateString("en-CA", {
-    timeZone: "Asia/Kolkata",
-  });
+// 🔥 FIX: Always return Date String based on UTC (Day changes at 5:30 AM IST)
+const getGlobalDateString = (date = new Date()) => {
+  return date.toISOString().split("T")[0]; 
 };
 
 export const updateStreakAndLogActivity = async (
   userId,
   problemId,
   problemType = "practice",
-  solveCount = 1 // 🔥 Naya parameter add kiya for Heatmap count sync
+  solveCount = 1 
 ) => {
   try {
     const now = new Date();
 
-    // 1. Aaj aur kal ki strict IST date strings nikalna
-    const dateString = getISTDateString(now);
+    const dateString = getGlobalDateString(now);
     
-    // Exactly 24 hours subtract karke 'yesterday' nikalna is mathematically safer
     const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const yesterdayString = getISTDateString(yesterdayDate);
+    const yesterdayString = getGlobalDateString(yesterdayDate);
 
-    // ==========================================
-    // 🔥 1. SMART ACTIVITY LOGGING (Duplicate Fix)
-    // ==========================================
+    // 1. SMART ACTIVITY LOGGING
     try {
       if (problemId === null) {
-        // LeetCode Sync ke liye: Agar same day dubara sync ho raha hai toh TOTAL count SET kar do
         await ActivityLog.findOneAndUpdate(
           { userId, problemId: null, dateString },
           { $set: { type: problemType, count: solveCount } }, 
           { upsert: true, new: true }
         );
       } else {
-        // Internal platform problem ke liye: Count humesha 1 rahega, same problem duplicate nahi hogi
         await ActivityLog.findOneAndUpdate(
           { userId, problemId, dateString },
           { $setOnInsert: { type: problemType, count: 1 } },
@@ -47,50 +39,39 @@ export const updateStreakAndLogActivity = async (
       console.error("Activity log upsert failed:", err);
     }
 
-    // ==========================================
-    // 2. FETCH USER & CHECK PREVIOUS ACTIVITY
-    // ==========================================
+    // 2. FETCH USER
     const user = await User.findById(userId);
     if (!user) return;
 
     const lastActivityString = user.streaks?.lastActivityDate
-      ? getISTDateString(new Date(user.streaks.lastActivityDate))
+      ? getGlobalDateString(new Date(user.streaks.lastActivityDate))
       : null;
 
-    // Safety check for Challenge Object
     if (!user.challenge) {
       user.challenge = { activeDays: null, progress: 0, startDate: null };
     }
 
-    // Aaj ki pehli activity check
     const isFirstSolveOfToday = lastActivityString !== dateString;
 
-    // ==========================================
     // A. GENERAL STREAK & CHALLENGE LOGIC
-    // ==========================================
     if (isFirstSolveOfToday) {
       
       if (lastActivityString === yesterdayString) {
-        // Kal solve kiya tha, toh streak +1 karo
         user.streaks.currentGeneral += 1;
       } else {
-        // Kal solve NAHI kiya tha, toh streak dobara 1 se shuru hogi
         user.streaks.currentGeneral = 1;
-
         if (user.challenge.activeDays) {
-          user.challenge.progress = 0; // Streak tutne par challenge reset
+          user.challenge.progress = 0; 
         }
       }
 
-      // Update max streak
       if (user.streaks.currentGeneral > (user.streaks.maxGeneral || 0)) {
         user.streaks.maxGeneral = user.streaks.currentGeneral;
       }
 
-      // Last activity update karo
       user.streaks.lastActivityDate = now;
 
-      // --- CHALLENGE PROGRESSION ---
+      // CHALLENGE PROGRESSION
       if (user.challenge.activeDays) {
         user.challenge.progress += 1;
         const progress = user.challenge.progress;
@@ -109,18 +90,15 @@ export const updateStreakAndLogActivity = async (
         }
       }
     } else {
-      // Aaj already solve kiya tha, par aaj hi naya challenge liya hai
       if (user.challenge.activeDays && user.challenge.progress === 0) {
         user.challenge.progress = 1;
       }
     }
 
-    // ==========================================
     // B. POTD SPECIFIC LOGIC
-    // ==========================================
     if (problemType === "potd") {
       const lastPotdString = user.streaks?.lastPotdDate
-        ? getISTDateString(new Date(user.streaks.lastPotdDate))
+        ? getGlobalDateString(new Date(user.streaks.lastPotdDate))
         : null;
 
       if (lastPotdString !== dateString) {
@@ -137,24 +115,21 @@ export const updateStreakAndLogActivity = async (
       }
     }
 
-    // ==========================================
     // C. CONTEST SPECIFIC LOGIC
-    // ==========================================
     if (problemType === "contest") {
       const lastContestString = user.streaks?.lastContestDate
-        ? getISTDateString(new Date(user.streaks.lastContestDate))
+        ? getGlobalDateString(new Date(user.streaks.lastContestDate))
         : null;
 
       if (lastContestString !== dateString) {
         let daysDiff = 9999;
         if (user.streaks.lastContestDate) {
-          // Calculate difference logically in IST
+          // Calculation based on UTC boundary
           const contestToday = new Date(dateString);
           const contestLastDate = new Date(lastContestString);
           daysDiff = Math.floor((contestToday - contestLastDate) / (1000 * 60 * 60 * 24));
         }
 
-        // Contest is weekly, giving an 8-day grace period
         if (daysDiff <= 8 && daysDiff > 0) {
           user.streaks.currentContest = (user.streaks.currentContest || 0) + 1;
         } else {
@@ -168,7 +143,6 @@ export const updateStreakAndLogActivity = async (
       }
     }
 
-    // Force mark modified to let mongoose know nested object changed
     user.markModified("streaks");
     user.markModified("challenge");
     user.markModified("badges");
